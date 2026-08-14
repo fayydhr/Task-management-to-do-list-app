@@ -5,7 +5,6 @@ import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../controllers/task_controller.dart';
 import '../models/project_model.dart';
-import '../models/task_model.dart';
 
 class HomeScreen extends StatelessWidget {
   HomeScreen({super.key});
@@ -15,6 +14,7 @@ class HomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      extendBody: true,
       backgroundColor: const Color(0xFFF8FAFC),
       body: Stack(
         children: [
@@ -45,7 +45,7 @@ class HomeScreen extends StatelessWidget {
                 slivers: [
                   // Top Header Bar
                   SliverPadding(
-                    padding: const EdgeInsets.fromLTRB(20, 16, 20, 10),
+                    padding: const EdgeInsets.fromLTRB(12, 16, 12, 10),
                     sliver: SliverToBoxAdapter(
                       child: Row(
                         children: [
@@ -115,7 +115,7 @@ class HomeScreen extends StatelessWidget {
 
                   // Progress Dashboard Card (Warna 5F33E1)
                   SliverPadding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                     sliver: SliverToBoxAdapter(
                       child: Obx(() {
                         final ratio = controller.todayProgressRatio;
@@ -220,7 +220,7 @@ class HomeScreen extends StatelessWidget {
 
                   // Section "In Progress"
                   SliverPadding(
-                    padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
+                    padding: const EdgeInsets.fromLTRB(12, 24, 12, 0),
                     sliver: SliverToBoxAdapter(
                       child: Row(
                         children: [
@@ -265,7 +265,7 @@ class HomeScreen extends StatelessWidget {
                             return const Center(child: Text('Belum ada Task Group'));
                           }
                           return ListView.builder(
-                            padding: const EdgeInsets.symmetric(horizontal: 20),
+                            padding: const EdgeInsets.symmetric(horizontal: 12),
                             scrollDirection: Axis.horizontal,
                             itemCount: controller.projects.length,
                             itemBuilder: (context, index) {
@@ -278,78 +278,59 @@ class HomeScreen extends StatelessWidget {
                     ),
                   ),
 
-                  // Today Tasks Section Title
+                  // Section "Task Groups"
                   SliverPadding(
-                    padding: const EdgeInsets.fromLTRB(20, 24, 20, 12),
+                    padding: const EdgeInsets.fromLTRB(12, 24, 12, 12),
                     sliver: SliverToBoxAdapter(
                       child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          const Text(
-                            'Tugas Hari Ini',
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: Color(0xFF0F172A),
+                          Text(
+                            'Task Groups',
+                            style: GoogleFonts.lexendDeca(
+                              fontSize: 19,
+                              fontWeight: FontWeight.w600,
+                              color: const Color(0xFF0F172A),
                             ),
                           ),
-                          GestureDetector(
-                            onTap: () => Get.toNamed('/today-tasks'),
-                            child: const Text(
-                              'Lihat Semua',
-                              style: TextStyle(
-                                color: Color(0xFF6366F1),
-                                fontWeight: FontWeight.w600,
-                                fontSize: 14,
-                              ),
-                            ),
-                          ),
+                          const SizedBox(width: 10),
+                          // Elips EEE9FF mengacu pada jumlah Task Groups
+                          Obx(() => Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFEEE9FF),
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                                child: Text(
+                                  '${controller.projects.length}',
+                                  style: GoogleFonts.lexendDeca(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                    color: const Color(0xFF5F33E1),
+                                  ),
+                                ),
+                              )),
                         ],
                       ),
                     ),
                   ),
 
-                  // Today Tasks List
+                  // Task Groups Vertical List (Container w331 h66 warna putih)
                   Obx(() {
-                    final tasks = controller.todayTasks;
-                    if (tasks.isEmpty) {
-                      return SliverToBoxAdapter(
-                        child: Container(
-                          margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                          padding: const EdgeInsets.all(24),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(16),
-                            border: Border.all(color: const Color(0xFFE2E8F0)),
-                          ),
-                          child: const Column(
-                            children: [
-                              Icon(Icons.check_circle_outline_rounded, size: 48, color: Color(0xFF10B981)),
-                              SizedBox(height: 10),
-                              Text(
-                                'Tidak Ada Tugas Hari Ini',
-                                style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF1E293B)),
-                              ),
-                              SizedBox(height: 4),
-                              Text(
-                                'Klik tombol + di bawah untuk menambah tugas baru',
-                                style: TextStyle(color: Color(0xFF64748B), fontSize: 13),
-                              ),
-                            ],
-                          ),
-                        ),
+                    if (controller.projects.isEmpty) {
+                      return const SliverToBoxAdapter(
+                        child: Center(child: Text('Belum ada Task Group')),
                       );
                     }
 
                     return SliverPadding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
                       sliver: SliverList(
                         delegate: SliverChildBuilderDelegate(
                           (context, index) {
-                            final task = tasks[index];
-                            return _buildTaskTile(task);
+                            final proj = controller.projects[index];
+                            return _buildTaskGroupTile(proj, index);
                           },
-                          childCount: tasks.length > 5 ? 5 : tasks.length,
+                          childCount: controller.projects.length,
                         ),
                       ),
                     );
@@ -362,17 +343,7 @@ class HomeScreen extends StatelessWidget {
           ),
         ],
       ),
-
-      // Bottom Navigation & FAB Action
       bottomNavigationBar: _buildBottomNav(),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => Get.toNamed('/add-project'),
-        backgroundColor: const Color(0xFF6366F1),
-        foregroundColor: Colors.white,
-        elevation: 4,
-        icon: const Icon(Icons.add_rounded),
-        label: const Text('Buat Baru', style: TextStyle(fontWeight: FontWeight.bold)),
-      ),
     );
   }
 
@@ -480,105 +451,223 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildTaskTile(TaskModel task) {
-    final color = Color(task.colorValue);
+  Widget _buildTaskGroupTile(ProjectModel proj, int index) {
+    final pastelThemes = [
+      {
+        'iconBg': const Color(0xFFFFE4F2),
+        'iconColor': const Color(0xFFF478B8),
+      },
+      {
+        'iconBg': const Color(0xFFE0F2FE),
+        'iconColor': const Color(0xFF0284C7),
+      },
+      {
+        'iconBg': const Color(0xFFFEE2E2),
+        'iconColor': const Color(0xFFEF4444),
+      },
+      {
+        'iconBg': const Color(0xFFF3E8FF),
+        'iconColor': const Color(0xFFA855F7),
+      },
+    ];
+
+    final theme = pastelThemes[index % pastelThemes.length];
+    final int totalTaskCount = controller.getTaskCountForProject(proj.name);
+    final double progress = controller.getProjectProgress(proj.name);
+    final int percentage = (progress * 100).toInt();
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: task.isCompleted ? const Color(0xFFE2E8F0) : color.withValues(alpha: 0.3),
-          width: task.isCompleted ? 1 : 1.5,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.02),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
-        leading: GestureDetector(
-          onTap: () => controller.toggleTaskStatus(task.id),
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            width: 26,
-            height: 26,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: task.isCompleted ? const Color(0xFF10B981) : Colors.transparent,
-              border: Border.all(
-                color: task.isCompleted ? const Color(0xFF10B981) : const Color(0xFF94A3B8),
-                width: 2,
-              ),
-            ),
-            child: task.isCompleted
-                ? const Icon(Icons.check_rounded, color: Colors.white, size: 16)
-                : null,
-          ),
-        ),
-        title: Text(
-          task.title,
-          style: TextStyle(
-            fontSize: 15,
-            fontWeight: FontWeight.w600,
-            color: task.isCompleted ? const Color(0xFF94A3B8) : const Color(0xFF0F172A),
-            decoration: task.isCompleted ? TextDecoration.lineThrough : null,
-          ),
-        ),
-        subtitle: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-              margin: const EdgeInsets.only(top: 4, right: 6),
-              decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(6),
-              ),
-              child: Text(
-                task.projectName,
-                style: TextStyle(fontSize: 11, color: color, fontWeight: FontWeight.w600),
-              ),
-            ),
-            Text(
-              task.time,
-              style: const TextStyle(fontSize: 11, color: Color(0xFF64748B)),
+        width: double.infinity,
+        height: 66,
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(14),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.03),
+              blurRadius: 8,
+              offset: const Offset(0, 3),
             ),
           ],
         ),
-        trailing: IconButton(
-          icon: const Icon(Icons.delete_outline_rounded, color: Color(0xFFEF4444), size: 20),
-          onPressed: () => controller.deleteTask(task.id),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            // Logo size 34 & Judul reg 14 + Total tasks reg 11 (6E6A7C)
+            Row(
+              children: [
+                Container(
+                  width: 34,
+                  height: 34,
+                  decoration: BoxDecoration(
+                    color: theme['iconBg'],
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Center(
+                    child: Icon(
+                      IconData(proj.iconCode, fontFamily: 'MaterialIcons'),
+                      size: 18,
+                      color: theme['iconColor'],
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      proj.name,
+                      style: GoogleFonts.lexendDeca(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w400,
+                        color: Colors.black,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      '$totalTaskCount Tasks',
+                      style: GoogleFonts.lexendDeca(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w400,
+                        color: const Color(0xFF6E6A7C),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+
+            // Lingkaran Progress Persen di Ujung Kanan (reg 11, warna terpenuhi iconColor, belum iconBg)
+            SizedBox(
+              width: 44,
+              height: 44,
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  SizedBox(
+                    width: 44,
+                    height: 44,
+                    child: CircularProgressIndicator(
+                      value: progress,
+                      strokeWidth: 4.5,
+                      backgroundColor: theme['iconBg'],
+                      valueColor: AlwaysStoppedAnimation<Color>(theme['iconColor']!),
+                      strokeCap: StrokeCap.round,
+                    ),
+                  ),
+                  Text(
+                    '$percentage%',
+                    style: GoogleFonts.lexendDeca(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w400,
+                      color: const Color(0xFF0F172A),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
-      ),
-    );
-  }
+      );
+    }
 
   Widget _buildBottomNav() {
-    return Container(
-      height: 65,
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        border: Border(top: BorderSide(color: Color(0xFFE2E8F0))),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
+    return SizedBox(
+      height: 90,
+      child: Stack(
+        alignment: Alignment.bottomCenter,
+        clipBehavior: Clip.none,
         children: [
-          IconButton(
-            onPressed: () {},
-            icon: const Icon(Icons.grid_view_rounded, color: Color(0xFF6366F1), size: 26),
+          // SVG Custom Bottom Bar Shape (assets/svg/buttombar.svg)
+          Positioned(
+            bottom: 0,
+            left: 0,
+            right: 0,
+            child: SvgPicture.asset(
+              'assets/svg/buttombar.svg',
+              width: double.infinity,
+              height: 56,
+              fit: BoxFit.fill,
+            ),
           ),
-          IconButton(
-            onPressed: () => Get.toNamed('/today-tasks'),
-            icon: const Icon(Icons.task_alt_rounded, color: Color(0xFF94A3B8), size: 26),
+
+          // Icons Overlay over Bottom Bar (height 56)
+          Positioned(
+            bottom: 0,
+            left: 0,
+            right: 0,
+            height: 56,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                IconButton(
+                  onPressed: () {},
+                  icon: SvgPicture.asset(
+                    'assets/svg/home.svg',
+                    width: 24,
+                    height: 24,
+                  ),
+                ),
+                IconButton(
+                  onPressed: () => Get.toNamed('/today-tasks'),
+                  icon: SvgPicture.asset(
+                    'assets/svg/calender.svg',
+                    width: 24,
+                    height: 24,
+                  ),
+                ),
+                const SizedBox(width: 48), // Celah tengah untuk plus button
+                IconButton(
+                  onPressed: () {},
+                  icon: SvgPicture.asset(
+                    'assets/svg/note.svg',
+                    width: 24,
+                    height: 24,
+                  ),
+                ),
+                IconButton(
+                  onPressed: () {},
+                  icon: SvgPicture.asset(
+                    'assets/svg/profile.svg',
+                    width: 24,
+                    height: 24,
+                  ),
+                ),
+              ],
+            ),
           ),
-          IconButton(
-            onPressed: () => Get.toNamed('/add-project'),
-            icon: const Icon(Icons.add_circle_outline_rounded, color: Color(0xFF94A3B8), size: 26),
+
+          // Plus Circle Button (size 46, warna 5F33E1, SVG assets/svg/plus.svg size 28, dengan shadow, bottom: 34)
+          Positioned(
+            bottom: 34,
+            child: GestureDetector(
+              onTap: () => Get.toNamed('/add-project'),
+              child: Container(
+                width: 46,
+                height: 46,
+                decoration: BoxDecoration(
+                  color: const Color(0xFF5F33E1),
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF5F33E1).withValues(alpha: 0.45),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Center(
+                  child: SvgPicture.asset(
+                    'assets/svg/plus.svg',
+                    width: 28,
+                    height: 28,
+                  ),
+                ),
+              ),
+            ),
           ),
         ],
       ),
