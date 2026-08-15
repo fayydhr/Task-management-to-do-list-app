@@ -1,9 +1,9 @@
 import 'package:get/get.dart';
-import '../views/splash_screen.dart';
-import '../views/home_screen.dart';
-import '../views/today_task_screen.dart';
-import '../views/add_project_screen.dart';
-import '../views/note_screen.dart';
+import '../presentation/views/splash_screen.dart';
+import '../presentation/views/home_screen.dart';
+import '../presentation/views/today_task_screen.dart';
+import '../presentation/views/add_project_screen.dart';
+import '../presentation/views/note_screen.dart';
 
 class AppPages {
   static const initial = '/splash';
@@ -26,7 +26,7 @@ class AppPages {
     ),
     GetPage(
       name: '/notes',
-      page: () => NoteScreen(),
+      page: () => const NoteScreen(),
       transition: Transition.noTransition,
     ),
     GetPage(

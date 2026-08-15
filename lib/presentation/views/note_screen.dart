@@ -4,8 +4,8 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
+import '../../domain/entities/note_entity.dart';
 import '../controllers/task_controller.dart';
-import '../models/note_model.dart';
 
 class NoteScreen extends StatefulWidget {
   const NoteScreen({super.key});
@@ -17,7 +17,19 @@ class NoteScreen extends StatefulWidget {
 class _NoteScreenState extends State<NoteScreen> {
   final TaskController controller = Get.isRegistered<TaskController>()
       ? Get.find<TaskController>()
-      : Get.put(TaskController());
+      : Get.put(TaskController(
+          getTasksUseCase: Get.find(),
+          addTaskUseCase: Get.find(),
+          toggleTaskStatusUseCase: Get.find(),
+          deleteTaskUseCase: Get.find(),
+          getProjectsUseCase: Get.find(),
+          addProjectUseCase: Get.find(),
+          deleteProjectUseCase: Get.find(),
+          getNotesUseCase: Get.find(),
+          addNoteUseCase: Get.find(),
+          togglePinNoteUseCase: Get.find(),
+          deleteNoteUseCase: Get.find(),
+        ));
 
   final TextEditingController _searchController = TextEditingController();
   String _selectedCategoryFilter = 'Semua';
@@ -81,14 +93,12 @@ class _NoteScreenState extends State<NoteScreen> {
       ),
       body: Stack(
         children: [
-          // Full Screen Background SVG (assets/svg/bg.svg)
           Positioned.fill(
             child: SvgPicture.asset(
               'assets/svg/bg.svg',
               fit: BoxFit.cover,
             ),
           ),
-          // Layered Blur 150 Effect
           Positioned.fill(
             child: BackdropFilter(
               filter: ImageFilter.blur(sigmaX: 150, sigmaY: 150),
@@ -97,16 +107,13 @@ class _NoteScreenState extends State<NoteScreen> {
               ),
             ),
           ),
-          // Foreground Content
           SafeArea(
             child: Column(
               children: [
-                // Top Search & Add Bar
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 10),
                   child: Row(
                     children: [
-                      // Search Input Box
                       Expanded(
                         child: Container(
                           height: 46,
@@ -152,8 +159,6 @@ class _NoteScreenState extends State<NoteScreen> {
                         ),
                       ),
                       const SizedBox(width: 12),
-
-                      // Add Note Button (+ Sticky Note)
                       GestureDetector(
                         onTap: _showAddNoteDialog,
                         child: Container(
@@ -178,8 +183,6 @@ class _NoteScreenState extends State<NoteScreen> {
                     ],
                   ),
                 ),
-
-                // Category Filter Pills
                 SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
                   physics: const BouncingScrollPhysics(),
@@ -187,7 +190,7 @@ class _NoteScreenState extends State<NoteScreen> {
                   child: Row(
                     children: [
                       _buildCategoryChip('Semua'),
-                      _buildCategoryChip('📌 Pinned'),
+                      _buildCategoryChip('Pinned'),
                       _buildCategoryChip('Desain UI/UX'),
                       _buildCategoryChip('Pengembangan Flutter'),
                       _buildCategoryChip('Pekerjaan Kantor'),
@@ -195,10 +198,7 @@ class _NoteScreenState extends State<NoteScreen> {
                     ],
                   ),
                 ),
-
                 const SizedBox(height: 12),
-
-                // Sticky Notes Grid View
                 Expanded(
                   child: Obx(() {
                     final query = _searchController.text.toLowerCase().trim();
@@ -210,11 +210,10 @@ class _NoteScreenState extends State<NoteScreen> {
                       if (!matchesSearch) return false;
 
                       if (_selectedCategoryFilter == 'Semua') return true;
-                      if (_selectedCategoryFilter == '📌 Pinned') return note.isPinned;
+                      if (_selectedCategoryFilter == 'Pinned') return note.isPinned;
                       return note.category == _selectedCategoryFilter;
                     }).toList();
 
-                    // Sort so pinned notes are shown first
                     displayedNotes.sort((a, b) {
                       if (a.isPinned && !b.isPinned) return -1;
                       if (!a.isPinned && b.isPinned) return 1;
@@ -295,7 +294,7 @@ class _NoteScreenState extends State<NoteScreen> {
     );
   }
 
-  Widget _buildStickyNoteCard(NoteModel note) {
+  Widget _buildStickyNoteCard(NoteEntity note) {
     final dateStr = DateFormat('dd MMM yyyy', 'en_US').format(note.date);
 
     return Container(
@@ -312,13 +311,11 @@ class _NoteScreenState extends State<NoteScreen> {
       ),
       child: Stack(
         children: [
-          // Content Padding
           Padding(
             padding: const EdgeInsets.all(14.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Top Tag & Pin Button
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -347,10 +344,7 @@ class _NoteScreenState extends State<NoteScreen> {
                     ),
                   ],
                 ),
-
                 const SizedBox(height: 10),
-
-                // Note Title
                 Text(
                   note.title,
                   maxLines: 2,
@@ -361,10 +355,7 @@ class _NoteScreenState extends State<NoteScreen> {
                     color: const Color(0xFF1E293B),
                   ),
                 ),
-
                 const SizedBox(height: 6),
-
-                // Note Body Content Preview
                 Expanded(
                   child: Text(
                     note.content,
@@ -378,8 +369,6 @@ class _NoteScreenState extends State<NoteScreen> {
                     ),
                   ),
                 ),
-
-                // Bottom Date & Delete Icon
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -448,7 +437,7 @@ class _NoteScreenState extends State<NoteScreen> {
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    'Buat Sticky Note Baru 📝',
+                    'Buat Sticky Note Baru',
                     style: GoogleFonts.lexendDeca(
                       fontSize: 17,
                       fontWeight: FontWeight.w600,
@@ -456,8 +445,6 @@ class _NoteScreenState extends State<NoteScreen> {
                     ),
                   ),
                   const SizedBox(height: 16),
-
-                  // Title Input
                   TextField(
                     controller: titleController,
                     style: GoogleFonts.lexendDeca(fontSize: 14, fontWeight: FontWeight.w600),
@@ -474,8 +461,6 @@ class _NoteScreenState extends State<NoteScreen> {
                     ),
                   ),
                   const SizedBox(height: 12),
-
-                  // Content Input
                   TextField(
                     controller: contentController,
                     maxLines: 4,
@@ -493,8 +478,6 @@ class _NoteScreenState extends State<NoteScreen> {
                     ),
                   ),
                   const SizedBox(height: 16),
-
-                  // Pastel Color Picker
                   Text(
                     'Warna Sticky Note:',
                     style: GoogleFonts.lexendDeca(fontSize: 12, fontWeight: FontWeight.w500, color: Colors.grey.shade700),
@@ -525,8 +508,6 @@ class _NoteScreenState extends State<NoteScreen> {
                     }).toList(),
                   ),
                   const SizedBox(height: 20),
-
-                  // Submit Button
                   SizedBox(
                     width: double.infinity,
                     height: 48,
@@ -536,7 +517,7 @@ class _NoteScreenState extends State<NoteScreen> {
                           Get.snackbar('Peringatan', 'Judul catatan tidak boleh kosong', snackPosition: SnackPosition.BOTTOM);
                           return;
                         }
-                        final newNote = NoteModel(
+                        final newNote = NoteEntity(
                           id: DateTime.now().millisecondsSinceEpoch.toString(),
                           title: titleController.text.trim(),
                           content: contentController.text.trim(),
@@ -569,7 +550,7 @@ class _NoteScreenState extends State<NoteScreen> {
     );
   }
 
-  void _confirmDeleteNote(NoteModel note) {
+  void _confirmDeleteNote(NoteEntity note) {
     Get.defaultDialog(
       title: 'Hapus Catatan',
       titleStyle: GoogleFonts.lexendDeca(fontWeight: FontWeight.w600, fontSize: 16),
@@ -594,7 +575,6 @@ class _NoteScreenState extends State<NoteScreen> {
         alignment: Alignment.bottomCenter,
         clipBehavior: Clip.none,
         children: [
-          // SVG Custom Bottom Bar Shape (assets/svg/buttombar.svg)
           Positioned(
             bottom: 0,
             left: 0,
@@ -606,8 +586,6 @@ class _NoteScreenState extends State<NoteScreen> {
               fit: BoxFit.fill,
             ),
           ),
-
-          // Icons Overlay over Bottom Bar
           Positioned(
             bottom: 0,
             left: 0,
@@ -638,7 +616,7 @@ class _NoteScreenState extends State<NoteScreen> {
                     ),
                   ),
                 ),
-                const SizedBox(width: 48), // Celah tengah untuk plus button
+                const SizedBox(width: 48),
                 GestureDetector(
                   onTap: () {},
                   child: Padding(
@@ -664,8 +642,6 @@ class _NoteScreenState extends State<NoteScreen> {
               ],
             ),
           ),
-
-          // Plus Circle Button
           Positioned(
             bottom: 34,
             child: GestureDetector(

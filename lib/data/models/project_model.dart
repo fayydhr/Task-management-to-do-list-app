@@ -1,16 +1,12 @@
-class ProjectModel {
-  String id;
-  String name;
-  String description;
-  int colorValue;
-  int iconCode;
+import '../../domain/entities/project_entity.dart';
 
+class ProjectModel extends ProjectEntity {
   ProjectModel({
-    required this.id,
-    required this.name,
-    this.description = '',
-    this.colorValue = 0xFF6366F1,
-    this.iconCode = 0xe3af, // default work / folder icon
+    required super.id,
+    required super.name,
+    super.description,
+    required super.colorValue,
+    super.iconCode,
   });
 
   Map<String, dynamic> toJson() {
@@ -30,6 +26,16 @@ class ProjectModel {
       description: json['description'] ?? '',
       colorValue: json['colorValue'] ?? 0xFF6366F1,
       iconCode: json['iconCode'] ?? 0xe3af,
+    );
+  }
+
+  factory ProjectModel.fromEntity(ProjectEntity entity) {
+    return ProjectModel(
+      id: entity.id,
+      name: entity.name,
+      description: entity.description,
+      colorValue: entity.colorValue,
+      iconCode: entity.iconCode,
     );
   }
 }

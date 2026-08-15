@@ -28,7 +28,7 @@ class SplashScreen extends StatelessWidget {
 
             const SizedBox(height: 16),
 
-            // Konten Teks dan Tombol di bagian bawah (tanpa scroll, pas di layar)
+            // Konten Teks dan Tombol di bagian bawah
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24.0),
               child: Column(

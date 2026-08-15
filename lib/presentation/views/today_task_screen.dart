@@ -4,16 +4,28 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
+import '../../domain/entities/task_entity.dart';
+import '../../domain/entities/project_entity.dart';
 import '../controllers/task_controller.dart';
-import '../models/task_model.dart';
-import '../models/project_model.dart';
 
 class TodayTaskScreen extends StatelessWidget {
   TodayTaskScreen({super.key});
 
   final TaskController controller = Get.isRegistered<TaskController>()
       ? Get.find<TaskController>()
-      : Get.put(TaskController());
+      : Get.put(TaskController(
+          getTasksUseCase: Get.find(),
+          addTaskUseCase: Get.find(),
+          toggleTaskStatusUseCase: Get.find(),
+          deleteTaskUseCase: Get.find(),
+          getProjectsUseCase: Get.find(),
+          addProjectUseCase: Get.find(),
+          deleteProjectUseCase: Get.find(),
+          getNotesUseCase: Get.find(),
+          addNoteUseCase: Get.find(),
+          togglePinNoteUseCase: Get.find(),
+          deleteNoteUseCase: Get.find(),
+        ));
 
   @override
   Widget build(BuildContext context) {
@@ -59,14 +71,12 @@ class TodayTaskScreen extends StatelessWidget {
       ),
       body: Stack(
         children: [
-          // Full Screen Background SVG (assets/svg/bg.svg)
           Positioned.fill(
             child: SvgPicture.asset(
               'assets/svg/bg.svg',
               fit: BoxFit.cover,
             ),
           ),
-          // Layered Blur 150 Effect
           Positioned.fill(
             child: BackdropFilter(
               filter: ImageFilter.blur(sigmaX: 150, sigmaY: 150),
@@ -75,17 +85,11 @@ class TodayTaskScreen extends StatelessWidget {
               ),
             ),
           ),
-          // Foreground Content
           SafeArea(
             child: Column(
               children: [
-                // Horizontal 1-Month Calendar
                 _buildHorizontalCalendar(context),
-
-                // SizedBox 32 below calendar container
                 const SizedBox(height: 32),
-
-                // Filter Tabs Bar (All, To Do, In Progress, Completed)
                 SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
                   physics: const BouncingScrollPhysics(),
@@ -102,10 +106,7 @@ class TodayTaskScreen extends StatelessWidget {
                     );
                   }),
                 ),
-
                 const SizedBox(height: 20),
-
-                // Task List
                 Expanded(
                   child: Obx(() {
                     final tasks = controller.filteredTodayTasks;
@@ -305,8 +306,7 @@ class TodayTaskScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildDetailTaskCard(TaskModel task) {
-    // Determine status string & colors
+  Widget _buildDetailTaskCard(TaskEntity task) {
     String statusText;
     Color statusTextColor;
     Color statusBgColor;
@@ -325,7 +325,6 @@ class TodayTaskScreen extends StatelessWidget {
       statusBgColor = const Color(0xFFE3F2FF);
     }
 
-    // Task group theme mapping matching Task Groups
     final pastelThemes = [
       {
         'iconBg': const Color(0xFFFFE4F2),
@@ -346,7 +345,7 @@ class TodayTaskScreen extends StatelessWidget {
     ];
 
     final int projIndex = controller.projects.indexWhere((p) => p.name == task.projectName);
-    final ProjectModel? project = projIndex >= 0 ? controller.projects[projIndex] : null;
+    final ProjectEntity? project = projIndex >= 0 ? controller.projects[projIndex] : null;
     final theme = pastelThemes[(projIndex >= 0 ? projIndex : 0) % pastelThemes.length];
 
     return Dismissible(
@@ -383,7 +382,6 @@ class TodayTaskScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            // Top Row: Project Name (Left) & Task Group Emoji/Icon Box (Right)
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -419,73 +417,66 @@ class TodayTaskScreen extends StatelessWidget {
                 ),
               ],
             ),
-
-              // Middle Left: Task Title (Lexend Deca reg 14, color black)
-              Text(
-                task.title.isNotEmpty ? task.title : 'Market Research',
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: GoogleFonts.lexendDeca(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w400,
-                  color: Colors.black,
-                ),
+            Text(
+              task.title.isNotEmpty ? task.title : 'Market Research',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: GoogleFonts.lexendDeca(
+                fontSize: 14,
+                fontWeight: FontWeight.w400,
+                color: Colors.black,
               ),
-
-              // Bottom Row: Clock & Time (Start) and Status Chip (End)
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  // Start: Clock SVG size 14 & Time Lexend Deca reg 11 color AB94FF
-                  Row(
-                    children: [
-                      SvgPicture.asset(
-                        'assets/svg/clock.svg',
-                        width: 14,
-                        height: 14,
-                        colorFilter: const ColorFilter.mode(
-                          Color(0xFFAB94FF),
-                          BlendMode.srcIn,
-                        ),
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Row(
+                  children: [
+                    SvgPicture.asset(
+                      'assets/svg/clock.svg',
+                      width: 14,
+                      height: 14,
+                      colorFilter: const ColorFilter.mode(
+                        Color(0xFFAB94FF),
+                        BlendMode.srcIn,
                       ),
-                      const SizedBox(width: 6),
-                      Text(
-                        task.time.isNotEmpty ? task.time : '10:00 AM',
-                        style: GoogleFonts.lexendDeca(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w400,
-                          color: const Color(0xFFAB94FF),
-                        ),
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      task.time.isNotEmpty ? task.time : '10:00 AM',
+                      style: GoogleFonts.lexendDeca(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w400,
+                        color: const Color(0xFFAB94FF),
                       ),
-                    ],
-                  ),
-
-                  // End: Status Chip Container (Radius 7, Lexend Deca reg 9)
-                  GestureDetector(
-                    onTap: () => controller.toggleTaskStatus(task.id),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: statusBgColor,
-                        borderRadius: BorderRadius.circular(7),
-                      ),
-                      child: Text(
-                        statusText,
-                        style: GoogleFonts.lexendDeca(
-                          fontSize: 9,
-                          fontWeight: FontWeight.w400,
-                          color: statusTextColor,
-                        ),
+                    ),
+                  ],
+                ),
+                GestureDetector(
+                  onTap: () => controller.toggleTaskStatus(task.id),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: statusBgColor,
+                      borderRadius: BorderRadius.circular(7),
+                    ),
+                    child: Text(
+                      statusText,
+                      style: GoogleFonts.lexendDeca(
+                        fontSize: 9,
+                        fontWeight: FontWeight.w400,
+                        color: statusTextColor,
                       ),
                     ),
                   ),
-                ],
-              ),
-            ],
-          ),
+                ),
+              ],
+            ),
+          ],
         ),
-      );
+      ),
+    );
   }
 
   Widget _buildBottomNav() {
@@ -495,7 +486,6 @@ class TodayTaskScreen extends StatelessWidget {
         alignment: Alignment.bottomCenter,
         clipBehavior: Clip.none,
         children: [
-          // SVG Custom Bottom Bar Shape (assets/svg/buttombar.svg)
           Positioned(
             bottom: 0,
             left: 0,
@@ -507,8 +497,6 @@ class TodayTaskScreen extends StatelessWidget {
               fit: BoxFit.fill,
             ),
           ),
-
-          // Icons Overlay over Bottom Bar (height 56)
           Positioned(
             bottom: 0,
             left: 0,
@@ -539,7 +527,7 @@ class TodayTaskScreen extends StatelessWidget {
                     ),
                   ),
                 ),
-                const SizedBox(width: 48), // Celah tengah untuk plus button
+                const SizedBox(width: 48),
                 GestureDetector(
                   onTap: () => Get.offAllNamed('/notes'),
                   child: Padding(
@@ -565,8 +553,6 @@ class TodayTaskScreen extends StatelessWidget {
               ],
             ),
           ),
-
-          // Plus Circle Button (size 46, warna 5F33E1, SVG assets/svg/plus.svg size 28, dengan shadow, bottom: 34)
           Positioned(
             bottom: 34,
             child: GestureDetector(

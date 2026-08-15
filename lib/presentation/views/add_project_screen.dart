@@ -4,9 +4,9 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
+import '../../domain/entities/project_entity.dart';
+import '../../domain/entities/task_entity.dart';
 import '../controllers/task_controller.dart';
-import '../models/project_model.dart';
-import '../models/task_model.dart';
 
 class AddProjectScreen extends StatefulWidget {
   const AddProjectScreen({super.key});
@@ -18,7 +18,19 @@ class AddProjectScreen extends StatefulWidget {
 class _AddProjectScreenState extends State<AddProjectScreen> {
   final TaskController controller = Get.isRegistered<TaskController>()
       ? Get.find<TaskController>()
-      : Get.put(TaskController());
+      : Get.put(TaskController(
+          getTasksUseCase: Get.find(),
+          addTaskUseCase: Get.find(),
+          toggleTaskStatusUseCase: Get.find(),
+          deleteTaskUseCase: Get.find(),
+          getProjectsUseCase: Get.find(),
+          addProjectUseCase: Get.find(),
+          deleteProjectUseCase: Get.find(),
+          getNotesUseCase: Get.find(),
+          addNoteUseCase: Get.find(),
+          togglePinNoteUseCase: Get.find(),
+          deleteNoteUseCase: Get.find(),
+        ));
 
   final _projectNameController = TextEditingController(text: 'Grocery Shopping App');
   final _descriptionController = TextEditingController();
@@ -63,9 +75,8 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Find current project info
     final int projIndex = controller.projects.indexWhere((p) => p.name == _selectedProjectName);
-    final ProjectModel? selectedProject = projIndex >= 0 ? controller.projects[projIndex] : null;
+    final ProjectEntity? selectedProject = projIndex >= 0 ? controller.projects[projIndex] : null;
     final theme = _pastelThemes[(projIndex >= 0 ? projIndex : 0) % _pastelThemes.length];
 
     final String startDateStr = DateFormat('dd MMM yyyy', 'en_US').format(_startDate);
@@ -112,14 +123,12 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
       ),
       body: Stack(
         children: [
-          // Full Screen Background SVG (assets/svg/bg.svg)
           Positioned.fill(
             child: SvgPicture.asset(
               'assets/svg/bg.svg',
               fit: BoxFit.cover,
             ),
           ),
-          // Layered Blur 150 Effect
           Positioned.fill(
             child: BackdropFilter(
               filter: ImageFilter.blur(sigmaX: 150, sigmaY: 150),
@@ -128,7 +137,6 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
               ),
             ),
           ),
-          // Foreground Content
           SafeArea(
             child: SingleChildScrollView(
               physics: const BouncingScrollPhysics(),
@@ -136,7 +144,6 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  // 1. Task Group Dropdown Bar (width double.infinity, height 63, kebawah.svg at end)
                   GestureDetector(
                     onTap: _showTaskGroupSelector,
                     child: Container(
@@ -156,7 +163,6 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
                       ),
                       child: Row(
                         children: [
-                          // Emoji / Icon box (size 24 after wrapping)
                           Container(
                             width: 24,
                             height: 24,
@@ -212,7 +218,6 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
 
                   const SizedBox(height: 24),
 
-                  // 2. Project Name Input Bar (width double.infinity, height 63)
                   Container(
                     width: double.infinity,
                     height: 63,
@@ -268,7 +273,6 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
 
                   const SizedBox(height: 24),
 
-                  // 3. Description Box (width double.infinity, height 142)
                   Container(
                     width: double.infinity,
                     height: 142,
@@ -324,7 +328,6 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
 
                   const SizedBox(height: 24),
 
-                  // 4. Start Date Picker (width double.infinity, height 63, kebawah.svg at end)
                   GestureDetector(
                     onTap: () => _pickDate(isStart: true),
                     child: Container(
@@ -387,7 +390,6 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
 
                   const SizedBox(height: 24),
 
-                  // 5. End Date Picker (width double.infinity, height 63, kebawah.svg at end)
                   GestureDetector(
                     onTap: () => _pickDate(isStart: false),
                     child: Container(
@@ -450,7 +452,6 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
 
                   const SizedBox(height: 160),
 
-                  // 6. Action Button Add Project (width double.infinity, height 52, bg 5F33E1, Lexend Deca semibold 19, corner radius 14)
                   SizedBox(
                     width: double.infinity,
                     height: 52,
@@ -586,10 +587,10 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
 
     final matchedProj = controller.projects.firstWhere(
       (p) => p.name == _selectedProjectName,
-      orElse: () => ProjectModel(id: '', name: _selectedProjectName, colorValue: 0xFF5F33E1),
+      orElse: () => ProjectEntity(id: '', name: _selectedProjectName, colorValue: 0xFF5F33E1),
     );
 
-    final newTask = TaskModel(
+    final newTask = TaskEntity(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
       title: title,
       description: _descriptionController.text.trim(),

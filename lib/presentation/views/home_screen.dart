@@ -3,13 +3,27 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../../domain/entities/project_entity.dart';
 import '../controllers/task_controller.dart';
-import '../models/project_model.dart';
 
 class HomeScreen extends StatelessWidget {
   HomeScreen({super.key});
 
-  final TaskController controller = Get.put(TaskController());
+  final TaskController controller = Get.isRegistered<TaskController>()
+      ? Get.find<TaskController>()
+      : Get.put(TaskController(
+          getTasksUseCase: Get.find(),
+          addTaskUseCase: Get.find(),
+          toggleTaskStatusUseCase: Get.find(),
+          deleteTaskUseCase: Get.find(),
+          getProjectsUseCase: Get.find(),
+          addProjectUseCase: Get.find(),
+          deleteProjectUseCase: Get.find(),
+          getNotesUseCase: Get.find(),
+          addNoteUseCase: Get.find(),
+          togglePinNoteUseCase: Get.find(),
+          deleteNoteUseCase: Get.find(),
+        ));
 
   @override
   Widget build(BuildContext context) {
@@ -38,7 +52,7 @@ class HomeScreen extends StatelessWidget {
           SafeArea(
             child: RefreshIndicator(
               onRefresh: () async {
-                controller.loadData();
+                controller.loadAllData();
               },
               child: CustomScrollView(
                 physics: const BouncingScrollPhysics(),
@@ -49,7 +63,6 @@ class HomeScreen extends StatelessWidget {
                     sliver: SliverToBoxAdapter(
                       child: Row(
                         children: [
-                          // Profile Picture dari internet (size: 46)
                           Container(
                             width: 46,
                             height: 46,
@@ -82,7 +95,6 @@ class HomeScreen extends StatelessWidget {
                               ),
                             ),
                           ),
-                          // Jarak PP ke font: 16
                           const SizedBox(width: 16),
                           Expanded(
                             child: Column(
@@ -146,7 +158,6 @@ class HomeScreen extends StatelessWidget {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
-                              // Teks & Tombol di Kiri
                               Expanded(
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -184,10 +195,7 @@ class HomeScreen extends StatelessWidget {
                                   ],
                                 ),
                               ),
-
                               const SizedBox(width: 16),
-
-                              // Lingkaran Progress Persen di Kanan (Jarak ke ujung kanan 75)
                               Padding(
                                 padding: const EdgeInsets.only(right: 55),
                                 child: SizedBox(
@@ -241,7 +249,6 @@ class HomeScreen extends StatelessWidget {
                             ),
                           ),
                           const SizedBox(width: 10),
-                          // Elips EEE9FF mengacu pada jumlah tugas in progress
                           Obx(() => Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                                 decoration: BoxDecoration(
@@ -262,7 +269,7 @@ class HomeScreen extends StatelessWidget {
                     ),
                   ),
 
-                  // Sizebox kebawah 16 & Task Groups Horizontal List (w202 h116)
+                  // Task Groups Horizontal List
                   SliverToBoxAdapter(
                     child: Padding(
                       padding: const EdgeInsets.only(top: 16.0),
@@ -301,7 +308,6 @@ class HomeScreen extends StatelessWidget {
                             ),
                           ),
                           const SizedBox(width: 10),
-                          // Elips EEE9FF mengacu pada jumlah Task Groups
                           Obx(() => Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                                 decoration: BoxDecoration(
@@ -322,7 +328,7 @@ class HomeScreen extends StatelessWidget {
                     ),
                   ),
 
-                  // Task Groups Vertical List (Container w331 h66 warna putih)
+                  // Task Groups Vertical List
                   Obx(() {
                     if (controller.projects.isEmpty) {
                       return const SliverToBoxAdapter(
@@ -355,7 +361,7 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildTaskGroupCard(ProjectModel proj, int index) {
+  Widget _buildTaskGroupCard(ProjectEntity proj, int index) {
     final pastelThemes = [
       {
         'bg': const Color(0xFFE7F3FF),
@@ -399,7 +405,6 @@ class HomeScreen extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          // Top Row: Category Title (reg 11 6E6A7C) & Emoji Box (size 24, bg FFE4F2, icon F478B8)
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -428,8 +433,6 @@ class HomeScreen extends StatelessWidget {
               ),
             ],
           ),
-
-          // Main Title (reg 14 warna hitam, max 2 baris)
           Text(
             proj.description.isNotEmpty ? proj.description : 'Grocery shopping app design',
             maxLines: 2,
@@ -440,8 +443,6 @@ class HomeScreen extends StatelessWidget {
               color: Colors.black,
             ),
           ),
-
-          // Progress Bar (w 170 h 6, bg putih, finished 0087FF)
           SizedBox(
             width: 170,
             height: 6,
@@ -459,7 +460,7 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildTaskGroupTile(ProjectModel proj, int index) {
+  Widget _buildTaskGroupTile(ProjectEntity proj, int index) {
     final pastelThemes = [
       {
         'iconBg': const Color(0xFFFFE4F2),
@@ -485,102 +486,99 @@ class HomeScreen extends StatelessWidget {
     final int percentage = (progress * 100).toInt();
 
     return Container(
-        width: double.infinity,
-        height: 66,
-        margin: const EdgeInsets.only(bottom: 12),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(14),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.03),
-              blurRadius: 8,
-              offset: const Offset(0, 3),
-            ),
-          ],
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            // Logo size 34 & Judul reg 14 + Total tasks reg 11 (6E6A7C)
-            Row(
-              children: [
-                Container(
-                  width: 34,
-                  height: 34,
-                  decoration: BoxDecoration(
-                    color: theme['iconBg'],
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Center(
-                    child: Icon(
-                      IconData(proj.iconCode, fontFamily: 'MaterialIcons'),
-                      size: 18,
-                      color: theme['iconColor'],
-                    ),
+      width: double.infinity,
+      height: 66,
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 8,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 34,
+                height: 34,
+                decoration: BoxDecoration(
+                  color: theme['iconBg'],
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Center(
+                  child: Icon(
+                    IconData(proj.iconCode, fontFamily: 'MaterialIcons'),
+                    size: 18,
+                    color: theme['iconColor'],
                   ),
                 ),
-                const SizedBox(width: 12),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      proj.name,
-                      style: GoogleFonts.lexendDeca(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w400,
-                        color: Colors.black,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      '$totalTaskCount Tasks',
-                      style: GoogleFonts.lexendDeca(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w400,
-                        color: const Color(0xFF6E6A7C),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-
-            // Lingkaran Progress Persen di Ujung Kanan (reg 11, warna terpenuhi iconColor, belum iconBg)
-            SizedBox(
-              width: 44,
-              height: 44,
-              child: Stack(
-                alignment: Alignment.center,
+              ),
+              const SizedBox(width: 12),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  SizedBox(
-                    width: 44,
-                    height: 44,
-                    child: CircularProgressIndicator(
-                      value: progress,
-                      strokeWidth: 4.5,
-                      backgroundColor: theme['iconBg'],
-                      valueColor: AlwaysStoppedAnimation<Color>(theme['iconColor']!),
-                      strokeCap: StrokeCap.round,
+                  Text(
+                    proj.name,
+                    style: GoogleFonts.lexendDeca(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w400,
+                      color: Colors.black,
                     ),
                   ),
+                  const SizedBox(height: 2),
                   Text(
-                    '$percentage%',
+                    '$totalTaskCount Tasks',
                     style: GoogleFonts.lexendDeca(
                       fontSize: 11,
                       fontWeight: FontWeight.w400,
-                      color: const Color(0xFF0F172A),
+                      color: const Color(0xFF6E6A7C),
                     ),
                   ),
                 ],
               ),
+            ],
+          ),
+          SizedBox(
+            width: 44,
+            height: 44,
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                SizedBox(
+                  width: 44,
+                  height: 44,
+                  child: CircularProgressIndicator(
+                    value: progress,
+                    strokeWidth: 4.5,
+                    backgroundColor: theme['iconBg'],
+                    valueColor: AlwaysStoppedAnimation<Color>(theme['iconColor']!),
+                    strokeCap: StrokeCap.round,
+                  ),
+                ),
+                Text(
+                  '$percentage%',
+                  style: GoogleFonts.lexendDeca(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w400,
+                    color: const Color(0xFF0F172A),
+                  ),
+                ),
+              ],
             ),
-          ],
-        ),
-      );
-    }
+          ),
+        ],
+      ),
+    );
+  }
 
   Widget _buildBottomNav() {
     return SizedBox(
@@ -589,7 +587,6 @@ class HomeScreen extends StatelessWidget {
         alignment: Alignment.bottomCenter,
         clipBehavior: Clip.none,
         children: [
-          // SVG Custom Bottom Bar Shape (assets/svg/buttombar.svg)
           Positioned(
             bottom: 0,
             left: 0,
@@ -601,8 +598,6 @@ class HomeScreen extends StatelessWidget {
               fit: BoxFit.fill,
             ),
           ),
-
-          // Icons Overlay over Bottom Bar (height 56)
           Positioned(
             bottom: 0,
             left: 0,
@@ -633,7 +628,7 @@ class HomeScreen extends StatelessWidget {
                     ),
                   ),
                 ),
-                const SizedBox(width: 48), // Celah tengah untuk plus button
+                const SizedBox(width: 48),
                 GestureDetector(
                   onTap: () => Get.offAllNamed('/notes'),
                   child: Padding(
@@ -659,8 +654,6 @@ class HomeScreen extends StatelessWidget {
               ],
             ),
           ),
-
-          // Plus Circle Button (size 46, warna 5F33E1, SVG assets/svg/plus.svg size 28, dengan shadow, bottom: 34)
           Positioned(
             bottom: 34,
             child: GestureDetector(

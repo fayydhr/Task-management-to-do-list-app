@@ -1,20 +1,14 @@
-class NoteModel {
-  String id;
-  String title;
-  String content;
-  String category;
-  DateTime date;
-  bool isPinned;
-  int colorValue;
+import '../../domain/entities/note_entity.dart';
 
+class NoteModel extends NoteEntity {
   NoteModel({
-    required this.id,
-    required this.title,
-    required this.content,
-    required this.category,
-    required this.date,
-    this.isPinned = false,
-    required this.colorValue,
+    required super.id,
+    required super.title,
+    required super.content,
+    required super.category,
+    required super.date,
+    super.isPinned,
+    required super.colorValue,
   });
 
   Map<String, dynamic> toJson() {
@@ -38,6 +32,18 @@ class NoteModel {
       date: json['date'] != null ? DateTime.parse(json['date']) : DateTime.now(),
       isPinned: json['isPinned'] ?? false,
       colorValue: json['colorValue'] ?? 0xFFFFF4BD,
+    );
+  }
+
+  factory NoteModel.fromEntity(NoteEntity entity) {
+    return NoteModel(
+      id: entity.id,
+      title: entity.title,
+      content: entity.content,
+      category: entity.category,
+      date: entity.date,
+      isPinned: entity.isPinned,
+      colorValue: entity.colorValue,
     );
   }
 }
