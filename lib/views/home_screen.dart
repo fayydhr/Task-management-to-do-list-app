@@ -635,7 +635,7 @@ class HomeScreen extends StatelessWidget {
                 ),
                 const SizedBox(width: 48), // Celah tengah untuk plus button
                 GestureDetector(
-                  onTap: () {},
+                  onTap: () => Get.offAllNamed('/notes'),
                   child: Padding(
                     padding: const EdgeInsets.all(12.0),
                     child: SvgPicture.asset(

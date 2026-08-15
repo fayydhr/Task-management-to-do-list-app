@@ -3,11 +3,14 @@ import 'package:get_storage/get_storage.dart';
 import '../models/task_model.dart';
 import '../models/project_model.dart';
 
+import '../models/note_model.dart';
+
 class TaskController extends GetxController {
   final _storage = GetStorage();
 
   var tasks = <TaskModel>[].obs;
   var projects = <ProjectModel>[].obs;
+  var notes = <NoteModel>[].obs;
 
   var selectedCategory = 'Semua'.obs;
   var selectedFilter = 'All'.obs; // All, To Do, In Progress, Completed
@@ -18,6 +21,7 @@ class TaskController extends GetxController {
   void onInit() {
     super.onInit();
     loadData();
+    loadNotes();
   }
 
   void loadData() {
@@ -199,5 +203,88 @@ class TaskController extends GetxController {
     if (projTasks.isEmpty) return 0.0;
     final done = projTasks.where((t) => t.isCompleted).length;
     return done / projTasks.length;
+  }
+
+  // --- Note Operations ---
+  void loadNotes() {
+    List? storedNotes = _storage.read<List>('notes');
+    if (storedNotes != null && storedNotes.isNotEmpty) {
+      notes.assignAll(storedNotes.map((e) => NoteModel.fromJson(Map<String, dynamic>.from(e))).toList());
+    } else {
+      notes.assignAll([
+        NoteModel(
+          id: 'n1',
+          title: 'Ide Fitur Dark Mode 🌙',
+          content: 'Tambahkan toggle mode gelap dengan palette warna slate 900 & aksen ungu pastel.',
+          category: 'Desain UI/UX',
+          date: DateTime.now(),
+          isPinned: true,
+          colorValue: 0xFFFFF4BD, // Pastel Yellow
+        ),
+        NoteModel(
+          id: 'n2',
+          title: 'Checklist Rapat Klien 📋',
+          content: '- Demo prototype mobile\n- Bahas alokasi deadline\n- Konfirmasi skema warna',
+          category: 'Pekerjaan Kantor',
+          date: DateTime.now().subtract(const Duration(days: 1)),
+          isPinned: true,
+          colorValue: 0xFFFFD6EC, // Pastel Pink
+        ),
+        NoteModel(
+          id: 'n3',
+          title: 'Daftar Buku Pilihan 📚',
+          content: '1. Clean Code\n2. Atomic Habits\n3. Designing Data-Intensive Applications',
+          category: 'Personal',
+          date: DateTime.now().subtract(const Duration(days: 2)),
+          isPinned: false,
+          colorValue: 0xFFE8DDFF, // Pastel Purple
+        ),
+        NoteModel(
+          id: 'n4',
+          title: 'Refactoring API Service ⚡',
+          content: 'Gunakan GetConnect / Dio dengan interceptor untuk handle refresh token.',
+          category: 'Pengembangan Flutter',
+          date: DateTime.now().subtract(const Duration(days: 3)),
+          isPinned: false,
+          colorValue: 0xFFD2E0FB, // Pastel Blue
+        ),
+      ]);
+      saveNotes();
+    }
+  }
+
+  void saveNotes() {
+    _storage.write('notes', notes.map((e) => e.toJson()).toList());
+  }
+
+  void addNote(NoteModel note) {
+    notes.insert(0, note);
+    saveNotes();
+    Get.snackbar(
+      'Catatan Dibuat',
+      'Catatan "${note.title}" telah disimpan',
+      snackPosition: SnackPosition.BOTTOM,
+      duration: const Duration(seconds: 2),
+    );
+  }
+
+  void togglePinNote(String id) {
+    int index = notes.indexWhere((n) => n.id == id);
+    if (index != -1) {
+      notes[index].isPinned = !notes[index].isPinned;
+      notes.refresh();
+      saveNotes();
+    }
+  }
+
+  void deleteNote(String id) {
+    notes.removeWhere((n) => n.id == id);
+    saveNotes();
+    Get.snackbar(
+      'Dihapus',
+      'Catatan telah dihapus',
+      snackPosition: SnackPosition.BOTTOM,
+      duration: const Duration(seconds: 2),
+    );
   }
 }

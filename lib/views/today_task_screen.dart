@@ -11,7 +11,9 @@ import '../models/project_model.dart';
 class TodayTaskScreen extends StatelessWidget {
   TodayTaskScreen({super.key});
 
-  final TaskController controller = Get.find<TaskController>();
+  final TaskController controller = Get.isRegistered<TaskController>()
+      ? Get.find<TaskController>()
+      : Get.put(TaskController());
 
   @override
   Widget build(BuildContext context) {
@@ -442,6 +444,10 @@ class TodayTaskScreen extends StatelessWidget {
                         'assets/svg/clock.svg',
                         width: 14,
                         height: 14,
+                        colorFilter: const ColorFilter.mode(
+                          Color(0xFFAB94FF),
+                          BlendMode.srcIn,
+                        ),
                       ),
                       const SizedBox(width: 6),
                       Text(
@@ -535,7 +541,7 @@ class TodayTaskScreen extends StatelessWidget {
                 ),
                 const SizedBox(width: 48), // Celah tengah untuk plus button
                 GestureDetector(
-                  onTap: () {},
+                  onTap: () => Get.offAllNamed('/notes'),
                   child: Padding(
                     padding: const EdgeInsets.all(12.0),
                     child: SvgPicture.asset(

@@ -1,9 +1,12 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import '../controllers/task_controller.dart';
-import '../models/task_model.dart';
 import '../models/project_model.dart';
+import '../models/task_model.dart';
 
 class AddProjectScreen extends StatefulWidget {
   const AddProjectScreen({super.key});
@@ -13,44 +16,34 @@ class AddProjectScreen extends StatefulWidget {
 }
 
 class _AddProjectScreenState extends State<AddProjectScreen> {
-  final TaskController controller = Get.find<TaskController>();
+  final TaskController controller = Get.isRegistered<TaskController>()
+      ? Get.find<TaskController>()
+      : Get.put(TaskController());
 
-  int _selectedTabIndex = 0; // 0 = Add Task, 1 = Add Project
+  final _projectNameController = TextEditingController(text: 'Grocery Shopping App');
+  final _descriptionController = TextEditingController();
+  
+  String _selectedProjectName = 'Work';
+  DateTime _startDate = DateTime.now();
+  DateTime _endDate = DateTime.now().add(const Duration(days: 7));
 
-  // Task Form Controls
-  final _taskTitleController = TextEditingController();
-  final _taskDescController = TextEditingController();
-  String _selectedProjectName = '';
-  String _selectedPriority = 'Sedang';
-  DateTime _selectedDate = DateTime.now();
-  TimeOfDay _selectedTime = TimeOfDay.now();
-
-  // Project Form Controls
-  final _projectNameController = TextEditingController();
-  final _projectDescController = TextEditingController();
-  int _selectedColorValue = 0xFF6366F1;
-  int _selectedIconCode = 0xe3af;
-
-  final List<int> _colorOptions = [
-    0xFF6366F1, // Indigo
-    0xFF10B981, // Emerald
-    0xFFF59E0B, // Amber
-    0xFFEC4899, // Pink
-    0xFF3B82F6, // Blue
-    0xFF8B5CF6, // Purple
-    0xFFEF4444, // Red
-    0xFF14B8A6, // Teal
-  ];
-
-  final List<int> _iconOptions = [
-    0xe3af, // folder / work
-    0xe1b1, // design / brush
-    0xe1d7, // code
-    0xe491, // person / personal
-    0xe57f, // shopping
-    0xe3e8, // book
-    0xe539, // fitness
-    0xe8b8, // star
+  final List<Map<String, dynamic>> _pastelThemes = [
+    {
+      'iconBg': const Color(0xFFFFE4F2),
+      'iconColor': const Color(0xFFF478B8),
+    },
+    {
+      'iconBg': const Color(0xFFE0F2FE),
+      'iconColor': const Color(0xFF0284C7),
+    },
+    {
+      'iconBg': const Color(0xFFFEE2E2),
+      'iconColor': const Color(0xFFEF4444),
+    },
+    {
+      'iconBg': const Color(0xFFF3E8FF),
+      'iconColor': const Color(0xFFA855F7),
+    },
   ];
 
   @override
@@ -63,488 +56,551 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
 
   @override
   void dispose() {
-    _taskTitleController.dispose();
-    _taskDescController.dispose();
     _projectNameController.dispose();
-    _projectDescController.dispose();
+    _descriptionController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    // Find current project info
+    final int projIndex = controller.projects.indexWhere((p) => p.name == _selectedProjectName);
+    final ProjectModel? selectedProject = projIndex >= 0 ? controller.projects[projIndex] : null;
+    final theme = _pastelThemes[(projIndex >= 0 ? projIndex : 0) % _pastelThemes.length];
+
+    final String startDateStr = DateFormat('dd MMM yyyy', 'en_US').format(_startDate);
+    final String endDateStr = DateFormat('dd MMM yyyy', 'en_US').format(_endDate);
+
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
       appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0.5,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Color(0xFF0F172A), size: 20),
-          onPressed: () => Get.back(),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        centerTitle: true,
+        leading: GestureDetector(
+          onTap: () => Get.back(),
+          child: Padding(
+            padding: const EdgeInsets.only(left: 12.0, top: 14, bottom: 14),
+            child: SvgPicture.asset(
+              'assets/svg/back.svg',
+              width: 24,
+              height: 24,
+            ),
+          ),
         ),
         title: Text(
-          _selectedTabIndex == 0 ? 'Buat Tugas Baru' : 'Buat Proyek Baru',
-          style: const TextStyle(
-            color: Color(0xFF0F172A),
-            fontWeight: FontWeight.bold,
-            fontSize: 20,
+          'Add Project',
+          style: GoogleFonts.lexendDeca(
+            color: Colors.black,
+            fontWeight: FontWeight.w600,
+            fontSize: 19,
           ),
         ),
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 12.0),
+            child: GestureDetector(
+              onTap: () {},
+              child: SvgPicture.asset(
+                'assets/svg/notif.svg',
+                width: 24,
+                height: 24,
+              ),
+            ),
+          ),
+        ],
       ),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(20.0),
+      body: Stack(
+        children: [
+          // Full Screen Background SVG (assets/svg/bg.svg)
+          Positioned.fill(
+            child: SvgPicture.asset(
+              'assets/svg/bg.svg',
+              fit: BoxFit.cover,
+            ),
+          ),
+          // Layered Blur 150 Effect
+          Positioned.fill(
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 150, sigmaY: 150),
+              child: Container(
+                color: Colors.transparent,
+              ),
+            ),
+          ),
+          // Foreground Content
+          SafeArea(
+            child: SingleChildScrollView(
+              physics: const BouncingScrollPhysics(),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  // 1. Task Group Dropdown Bar (width double.infinity, height 63, kebawah.svg at end)
+                  GestureDetector(
+                    onTap: _showTaskGroupSelector,
+                    child: Container(
+                      width: double.infinity,
+                      height: 63,
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(15),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.04),
+                            blurRadius: 8,
+                            offset: const Offset(0, 3),
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        children: [
+                          // Emoji / Icon box (size 24 after wrapping)
+                          Container(
+                            width: 24,
+                            height: 24,
+                            decoration: BoxDecoration(
+                              color: theme['iconBg'],
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Center(
+                              child: Icon(
+                                selectedProject != null
+                                    ? IconData(selectedProject.iconCode, fontFamily: 'MaterialIcons')
+                                    : Icons.work_outline,
+                                size: 14,
+                                color: theme['iconColor'],
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Task Group',
+                                  style: GoogleFonts.lexendDeca(
+                                    fontSize: 9,
+                                    fontWeight: FontWeight.w400,
+                                    color: const Color(0xFF6E6A7C),
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  _selectedProjectName.isNotEmpty ? _selectedProjectName : 'Work',
+                                  style: GoogleFonts.lexendDeca(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.black,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          SvgPicture.asset(
+                            'assets/svg/kebawah.svg',
+                            width: 24,
+                            height: 24,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 24),
+
+                  // 2. Project Name Input Bar (width double.infinity, height 63)
+                  Container(
+                    width: double.infinity,
+                    height: 63,
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(15),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.04),
+                          blurRadius: 8,
+                          offset: const Offset(0, 3),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Project Name',
+                          style: GoogleFonts.lexendDeca(
+                            fontSize: 9,
+                            fontWeight: FontWeight.w400,
+                            color: const Color(0xFF6E6A7C),
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Expanded(
+                          child: TextField(
+                            controller: _projectNameController,
+                            style: GoogleFonts.lexendDeca(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w400,
+                              color: Colors.black,
+                            ),
+                            decoration: InputDecoration(
+                              isDense: true,
+                              contentPadding: EdgeInsets.zero,
+                              border: InputBorder.none,
+                              hintText: 'Grocery Shopping App',
+                              hintStyle: GoogleFonts.lexendDeca(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w400,
+                                color: const Color(0xFF94A3B8),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 24),
+
+                  // 3. Description Box (width double.infinity, height 142)
+                  Container(
+                    width: double.infinity,
+                    height: 142,
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(15),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.04),
+                          blurRadius: 8,
+                          offset: const Offset(0, 3),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Description',
+                          style: GoogleFonts.lexendDeca(
+                            fontSize: 9,
+                            fontWeight: FontWeight.w400,
+                            color: const Color(0xFF6E6A7C),
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Expanded(
+                          child: TextField(
+                            controller: _descriptionController,
+                            maxLines: 5,
+                            style: GoogleFonts.lexendDeca(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w400,
+                              color: Colors.black,
+                            ),
+                            decoration: InputDecoration(
+                              isDense: true,
+                              contentPadding: EdgeInsets.zero,
+                              border: InputBorder.none,
+                              hintText: 'Enter project details...',
+                              hintStyle: GoogleFonts.lexendDeca(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w400,
+                                color: const Color(0xFF94A3B8),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 24),
+
+                  // 4. Start Date Picker (width double.infinity, height 63, kebawah.svg at end)
+                  GestureDetector(
+                    onTap: () => _pickDate(isStart: true),
+                    child: Container(
+                      width: double.infinity,
+                      height: 63,
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(15),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.04),
+                            blurRadius: 8,
+                            offset: const Offset(0, 3),
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        children: [
+                          SvgPicture.asset(
+                            'assets/svg/calender.svg',
+                            width: 20,
+                            height: 20,
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Start Date',
+                                  style: GoogleFonts.lexendDeca(
+                                    fontSize: 9,
+                                    fontWeight: FontWeight.w400,
+                                    color: const Color(0xFF6E6A7C),
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  startDateStr,
+                                  style: GoogleFonts.lexendDeca(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w400,
+                                    color: Colors.black,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          SvgPicture.asset(
+                            'assets/svg/kebawah.svg',
+                            width: 24,
+                            height: 24,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 24),
+
+                  // 5. End Date Picker (width double.infinity, height 63, kebawah.svg at end)
+                  GestureDetector(
+                    onTap: () => _pickDate(isStart: false),
+                    child: Container(
+                      width: double.infinity,
+                      height: 63,
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(15),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.04),
+                            blurRadius: 8,
+                            offset: const Offset(0, 3),
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        children: [
+                          SvgPicture.asset(
+                            'assets/svg/calender.svg',
+                            width: 20,
+                            height: 20,
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'End Date',
+                                  style: GoogleFonts.lexendDeca(
+                                    fontSize: 9,
+                                    fontWeight: FontWeight.w400,
+                                    color: const Color(0xFF6E6A7C),
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  endDateStr,
+                                  style: GoogleFonts.lexendDeca(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w400,
+                                    color: Colors.black,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          SvgPicture.asset(
+                            'assets/svg/kebawah.svg',
+                            width: 24,
+                            height: 24,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 160),
+
+                  // 6. Action Button Add Project (width double.infinity, height 52, bg 5F33E1, Lexend Deca semibold 19, corner radius 14)
+                  SizedBox(
+                    width: double.infinity,
+                    height: 52,
+                    child: ElevatedButton(
+                      onPressed: _submitForm,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF5F33E1),
+                        foregroundColor: Colors.white,
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                      ),
+                      child: Text(
+                        'Add Project',
+                        style: GoogleFonts.lexendDeca(
+                          fontSize: 19,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 30),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showTaskGroupSelector() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return Container(
+          padding: const EdgeInsets.all(20),
           child: Column(
+            mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Segmented Tab Switcher
-              Container(
-                padding: const EdgeInsets.all(4),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFE2E8F0),
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: GestureDetector(
-                        onTap: () => setState(() => _selectedTabIndex = 0),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                          decoration: BoxDecoration(
-                            color: _selectedTabIndex == 0 ? Colors.white : Colors.transparent,
-                            borderRadius: BorderRadius.circular(12),
-                            boxShadow: _selectedTabIndex == 0
-                                ? [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 4)]
-                                : [],
-                          ),
-                          child: Center(
-                            child: Text(
-                              'Tambah Tugas',
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                color: _selectedTabIndex == 0 ? const Color(0xFF6366F1) : const Color(0xFF64748B),
-                                fontSize: 14,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                    Expanded(
-                      child: GestureDetector(
-                        onTap: () => setState(() => _selectedTabIndex = 1),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                          decoration: BoxDecoration(
-                            color: _selectedTabIndex == 1 ? Colors.white : Colors.transparent,
-                            borderRadius: BorderRadius.circular(12),
-                            boxShadow: _selectedTabIndex == 1
-                                ? [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 4)]
-                                : [],
-                          ),
-                          child: Center(
-                            child: Text(
-                              'Tambah Proyek',
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                color: _selectedTabIndex == 1 ? const Color(0xFF6366F1) : const Color(0xFF64748B),
-                                fontSize: 14,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
+              Text(
+                'Pilih Task Group',
+                style: GoogleFonts.lexendDeca(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.black,
                 ),
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 14),
+              ...List.generate(controller.projects.length, (index) {
+                final proj = controller.projects[index];
+                final theme = _pastelThemes[index % _pastelThemes.length];
+                final bool isSelected = proj.name == _selectedProjectName;
 
-              // Form Content depending on tab
-              _selectedTabIndex == 0 ? _buildTaskForm() : _buildProjectForm(),
+                return ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: Container(
+                    width: 30,
+                    height: 30,
+                    decoration: BoxDecoration(
+                      color: theme['iconBg'],
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Center(
+                      child: Icon(
+                        IconData(proj.iconCode, fontFamily: 'MaterialIcons'),
+                        size: 16,
+                        color: theme['iconColor'],
+                      ),
+                    ),
+                  ),
+                  title: Text(
+                    proj.name,
+                    style: GoogleFonts.lexendDeca(
+                      fontSize: 14,
+                      fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                      color: isSelected ? const Color(0xFF5F33E1) : Colors.black,
+                    ),
+                  ),
+                  trailing: isSelected
+                      ? const Icon(Icons.check_circle_rounded, color: Color(0xFF5F33E1))
+                      : null,
+                  onTap: () {
+                    setState(() {
+                      _selectedProjectName = proj.name;
+                    });
+                    Get.back();
+                  },
+                );
+              }),
             ],
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 
-  // --- Task Form ---
-  Widget _buildTaskForm() {
-    final formattedDate = DateFormat('dd MMM yyyy', 'id_ID').format(_selectedDate);
-    final formattedTime = _selectedTime.format(context);
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _buildLabel('Judul Tugas'),
-        TextField(
-          controller: _taskTitleController,
-          decoration: _inputDecoration('Misal: Meeting Laporan UI/UX'),
-        ),
-        const SizedBox(height: 20),
-
-        _buildLabel('Pilih Proyek / Kategori'),
-        Obx(() {
-          if (controller.projects.isEmpty) {
-            return const Text('Belum ada proyek. Buat proyek terlebih dahulu.', style: TextStyle(color: Colors.red));
-          }
-          return DropdownButtonFormField<String>(
-            initialValue: controller.projects.any((p) => p.name == _selectedProjectName)
-                ? _selectedProjectName
-                : controller.projects.first.name,
-            decoration: _inputDecoration(''),
-            items: controller.projects.map((proj) {
-              return DropdownMenuItem<String>(
-                value: proj.name,
-                child: Row(
-                  children: [
-                    Container(
-                      width: 12,
-                      height: 12,
-                      decoration: BoxDecoration(
-                        color: Color(proj.colorValue),
-                        shape: BoxShape.circle,
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Text(proj.name),
-                  ],
-                ),
-              );
-            }).toList(),
-            onChanged: (val) {
-              if (val != null) {
-                setState(() => _selectedProjectName = val);
-              }
-            },
-          );
-        }),
-        const SizedBox(height: 20),
-
-        _buildLabel('Tingkat Prioritas'),
-        Row(
-          children: [
-            _buildPriorityChip('Tinggi', const Color(0xFFEF4444)),
-            const SizedBox(width: 10),
-            _buildPriorityChip('Sedang', const Color(0xFFF59E0B)),
-            const SizedBox(width: 10),
-            _buildPriorityChip('Rendah', const Color(0xFF10B981)),
-          ],
-        ),
-        const SizedBox(height: 20),
-
-        Row(
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildLabel('Tanggal'),
-                  InkWell(
-                    onTap: _pickDate,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(14),
-                        border: Border.all(color: const Color(0xFFE2E8F0)),
-                      ),
-                      child: Row(
-                        children: [
-                          const Icon(Icons.calendar_month_rounded, color: Color(0xFF6366F1), size: 18),
-                          const SizedBox(width: 8),
-                          Text(formattedDate, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildLabel('Waktu'),
-                  InkWell(
-                    onTap: _pickTime,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(14),
-                        border: Border.all(color: const Color(0xFFE2E8F0)),
-                      ),
-                      child: Row(
-                        children: [
-                          const Icon(Icons.access_time_rounded, color: Color(0xFF6366F1), size: 18),
-                          const SizedBox(width: 8),
-                          Text(formattedTime, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 20),
-
-        _buildLabel('Deskripsi (Opsional)'),
-        TextField(
-          controller: _taskDescController,
-          maxLines: 3,
-          decoration: _inputDecoration('Tambahkan catatan detail mengenai tugas ini...'),
-        ),
-        const SizedBox(height: 32),
-
-        SizedBox(
-          width: double.infinity,
-          height: 54,
-          child: ElevatedButton(
-            onPressed: _submitTask,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF6366F1),
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-              elevation: 4,
-            ),
-            child: const Text('Simpan Tugas Baru', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-          ),
-        ),
-      ],
-    );
-  }
-
-  // --- Project Form ---
-  Widget _buildProjectForm() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _buildLabel('Nama Proyek'),
-        TextField(
-          controller: _projectNameController,
-          decoration: _inputDecoration('Misal: Aplikasi E-Commerce'),
-        ),
-        const SizedBox(height: 20),
-
-        _buildLabel('Deskripsi Proyek'),
-        TextField(
-          controller: _projectDescController,
-          maxLines: 2,
-          decoration: _inputDecoration('Deskripsi singkat cakupan proyek...'),
-        ),
-        const SizedBox(height: 20),
-
-        _buildLabel('Pilih Warna Proyek'),
-        Wrap(
-          spacing: 12,
-          runSpacing: 12,
-          children: _colorOptions.map((cVal) {
-            final bool isSelected = _selectedColorValue == cVal;
-            return GestureDetector(
-              onTap: () => setState(() => _selectedColorValue = cVal),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  color: Color(cVal),
-                  shape: BoxShape.circle,
-                  border: isSelected ? Border.all(color: Colors.black, width: 3) : null,
-                  boxShadow: [
-                    BoxShadow(
-                      color: Color(cVal).withValues(alpha: 0.4),
-                      blurRadius: 6,
-                      offset: const Offset(0, 3),
-                    ),
-                  ],
-                ),
-                child: isSelected ? const Icon(Icons.check_rounded, color: Colors.white, size: 22) : null,
-              ),
-            );
-          }).toList(),
-        ),
-        const SizedBox(height: 24),
-
-        _buildLabel('Pilih Ikon Proyek'),
-        Wrap(
-          spacing: 12,
-          runSpacing: 12,
-          children: _iconOptions.map((iCode) {
-            final bool isSelected = _selectedIconCode == iCode;
-            return GestureDetector(
-              onTap: () => setState(() => _selectedIconCode = iCode),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                width: 46,
-                height: 46,
-                decoration: BoxDecoration(
-                  color: isSelected ? Color(_selectedColorValue) : Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: isSelected ? Color(_selectedColorValue) : const Color(0xFFE2E8F0),
-                  ),
-                ),
-                child: Icon(
-                  IconData(iCode, fontFamily: 'MaterialIcons'),
-                  color: isSelected ? Colors.white : const Color(0xFF64748B),
-                  size: 22,
-                ),
-              ),
-            );
-          }).toList(),
-        ),
-        const SizedBox(height: 32),
-
-        SizedBox(
-          width: double.infinity,
-          height: 54,
-          child: ElevatedButton(
-            onPressed: _submitProject,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Color(_selectedColorValue),
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-              elevation: 4,
-            ),
-            child: const Text('Simpan Proyek Baru', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildLabel(String title) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8.0),
-      child: Text(
-        title,
-        style: const TextStyle(
-          fontSize: 14,
-          fontWeight: FontWeight.bold,
-          color: Color(0xFF0F172A),
-        ),
-      ),
-    );
-  }
-
-  InputDecoration _inputDecoration(String hint) {
-    return InputDecoration(
-      hintText: hint,
-      hintStyle: const TextStyle(color: Color(0xFF94A3B8), fontSize: 14),
-      filled: true,
-      fillColor: Colors.white,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(14),
-        borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
-      ),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(14),
-        borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(14),
-        borderSide: const BorderSide(color: Color(0xFF6366F1)),
-      ),
-    );
-  }
-
-  Widget _buildPriorityChip(String level, Color color) {
-    final bool isSelected = _selectedPriority == level;
-    return Expanded(
-      child: GestureDetector(
-        onTap: () => setState(() => _selectedPriority = level),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 150),
-          padding: const EdgeInsets.symmetric(vertical: 12),
-          decoration: BoxDecoration(
-            color: isSelected ? color : Colors.white,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: isSelected ? color : const Color(0xFFE2E8F0)),
-          ),
-          child: Center(
-            child: Text(
-              level,
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 13,
-                color: isSelected ? Colors.white : const Color(0xFF64748B),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Future<void> _pickDate() async {
+  Future<void> _pickDate({required bool isStart}) async {
     final picked = await showDatePicker(
       context: context,
-      initialDate: _selectedDate,
-      firstDate: DateTime.now().subtract(const Duration(days: 30)),
-      lastDate: DateTime.now().add(const Duration(days: 365)),
+      initialDate: isStart ? _startDate : _endDate,
+      firstDate: DateTime.now().subtract(const Duration(days: 365)),
+      lastDate: DateTime.now().add(const Duration(days: 365 * 3)),
     );
     if (picked != null) {
-      setState(() => _selectedDate = picked);
+      setState(() {
+        if (isStart) {
+          _startDate = picked;
+          if (_endDate.isBefore(_startDate)) {
+            _endDate = _startDate.add(const Duration(days: 1));
+          }
+        } else {
+          _endDate = picked;
+        }
+      });
     }
   }
 
-  Future<void> _pickTime() async {
-    final picked = await showTimePicker(
-      context: context,
-      initialTime: _selectedTime,
-    );
-    if (picked != null) {
-      setState(() => _selectedTime = picked);
-    }
-  }
-
-  void _submitTask() {
-    if (_taskTitleController.text.trim().isEmpty) {
-      Get.snackbar('Peringatan', 'Judul tugas tidak boleh kosong', snackPosition: SnackPosition.BOTTOM);
+  void _submitForm() {
+    final title = _projectNameController.text.trim();
+    if (title.isEmpty) {
+      Get.snackbar('Peringatan', 'Project Name tidak boleh kosong', snackPosition: SnackPosition.BOTTOM);
       return;
     }
 
     final matchedProj = controller.projects.firstWhere(
       (p) => p.name == _selectedProjectName,
-      orElse: () => ProjectModel(id: '', name: 'Umum', colorValue: 0xFF6366F1),
+      orElse: () => ProjectModel(id: '', name: _selectedProjectName, colorValue: 0xFF5F33E1),
     );
 
     final newTask = TaskModel(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
-      title: _taskTitleController.text.trim(),
-      description: _taskDescController.text.trim(),
+      title: title,
+      description: _descriptionController.text.trim(),
       projectName: matchedProj.name,
-      date: _selectedDate,
-      time: '${_selectedTime.hour.toString().padLeft(2, '0')}:${_selectedTime.minute.toString().padLeft(2, '0')}',
-      priority: _selectedPriority,
+      date: _startDate,
+      time: DateFormat('hh:mm a').format(DateTime.now()),
+      priority: 'Tinggi',
       colorValue: matchedProj.colorValue,
     );
 
     controller.addTask(newTask);
-    Get.back();
-  }
-
-  void _submitProject() {
-    if (_projectNameController.text.trim().isEmpty) {
-      Get.snackbar('Peringatan', 'Nama proyek tidak boleh kosong', snackPosition: SnackPosition.BOTTOM);
-      return;
-    }
-
-    final newProj = ProjectModel(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
-      name: _projectNameController.text.trim(),
-      description: _projectDescController.text.trim(),
-      colorValue: _selectedColorValue,
-      iconCode: _selectedIconCode,
-    );
-
-    controller.addProject(newProj);
     Get.back();
   }
 }

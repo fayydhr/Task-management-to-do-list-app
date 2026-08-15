@@ -3,6 +3,7 @@ import '../views/splash_screen.dart';
 import '../views/home_screen.dart';
 import '../views/today_task_screen.dart';
 import '../views/add_project_screen.dart';
+import '../views/note_screen.dart';
 
 class AppPages {
   static const initial = '/splash';
@@ -21,6 +22,11 @@ class AppPages {
     GetPage(
       name: '/today-tasks',
       page: () => TodayTaskScreen(),
+      transition: Transition.noTransition,
+    ),
+    GetPage(
+      name: '/notes',
+      page: () => NoteScreen(),
       transition: Transition.noTransition,
     ),
     GetPage(
