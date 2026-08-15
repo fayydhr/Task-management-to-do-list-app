@@ -108,6 +108,14 @@ class HomeScreen extends StatelessWidget {
                               ],
                             ),
                           ),
+                          GestureDetector(
+                            onTap: () {},
+                            child: SvgPicture.asset(
+                              'assets/svg/notif.svg',
+                              width: 24,
+                              height: 24,
+                            ),
+                          ),
                         ],
                       ),
                     ),
@@ -603,37 +611,49 @@ class HomeScreen extends StatelessWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                IconButton(
-                  onPressed: () {},
-                  icon: SvgPicture.asset(
-                    'assets/svg/home.svg',
-                    width: 24,
-                    height: 24,
+                GestureDetector(
+                  onTap: () {},
+                  child: Padding(
+                    padding: const EdgeInsets.all(12.0),
+                    child: SvgPicture.asset(
+                      'assets/svg/home.svg',
+                      width: 24,
+                      height: 24,
+                    ),
                   ),
                 ),
-                IconButton(
-                  onPressed: () => Get.toNamed('/today-tasks'),
-                  icon: SvgPicture.asset(
-                    'assets/svg/calender.svg',
-                    width: 24,
-                    height: 24,
+                GestureDetector(
+                  onTap: () => Get.offAllNamed('/today-tasks'),
+                  child: Padding(
+                    padding: const EdgeInsets.all(12.0),
+                    child: SvgPicture.asset(
+                      'assets/svg/calender.svg',
+                      width: 24,
+                      height: 24,
+                    ),
                   ),
                 ),
                 const SizedBox(width: 48), // Celah tengah untuk plus button
-                IconButton(
-                  onPressed: () {},
-                  icon: SvgPicture.asset(
-                    'assets/svg/note.svg',
-                    width: 24,
-                    height: 24,
+                GestureDetector(
+                  onTap: () {},
+                  child: Padding(
+                    padding: const EdgeInsets.all(12.0),
+                    child: SvgPicture.asset(
+                      'assets/svg/note.svg',
+                      width: 24,
+                      height: 24,
+                    ),
                   ),
                 ),
-                IconButton(
-                  onPressed: () {},
-                  icon: SvgPicture.asset(
-                    'assets/svg/profile.svg',
-                    width: 24,
-                    height: 24,
+                GestureDetector(
+                  onTap: () {},
+                  child: Padding(
+                    padding: const EdgeInsets.all(12.0),
+                    child: SvgPicture.asset(
+                      'assets/svg/profile.svg',
+                      width: 24,
+                      height: 24,
+                    ),
                   ),
                 ),
               ],

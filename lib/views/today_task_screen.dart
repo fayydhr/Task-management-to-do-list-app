@@ -1,8 +1,12 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import '../controllers/task_controller.dart';
 import '../models/task_model.dart';
+import '../models/project_model.dart';
 
 class TodayTaskScreen extends StatelessWidget {
   TodayTaskScreen({super.key});
@@ -11,202 +15,337 @@ class TodayTaskScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final String dateStr = DateFormat('EEEE, d MMMM', 'id_ID').format(DateTime.now());
-
     return Scaffold(
+      extendBody: true,
       backgroundColor: const Color(0xFFF8FAFC),
       appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0.5,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Color(0xFF0F172A), size: 20),
-          onPressed: () => Get.back(),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        centerTitle: true,
+        leading: GestureDetector(
+          onTap: () => Get.back(),
+          child: Padding(
+            padding: const EdgeInsets.all(14.0),
+            child: SvgPicture.asset(
+              'assets/svg/back.svg',
+              width: 24,
+              height: 24,
+            ),
+          ),
         ),
-        title: const Text(
-          'Tugas Hari Ini',
-          style: TextStyle(
-            color: Color(0xFF0F172A),
-            fontWeight: FontWeight.bold,
-            fontSize: 20,
+        title: Text(
+          'Today’s Tasks',
+          style: GoogleFonts.lexendDeca(
+            color: const Color(0xFF0F172A),
+            fontWeight: FontWeight.w600,
+            fontSize: 19,
           ),
         ),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.add_rounded, color: Color(0xFF6366F1), size: 28),
-            onPressed: () => Get.toNamed('/add-project'),
+          Padding(
+            padding: const EdgeInsets.only(right: 16.0),
+            child: GestureDetector(
+              onTap: () {},
+              child: SvgPicture.asset(
+                'assets/svg/notif.svg',
+                width: 24,
+                height: 24,
+              ),
+            ),
           ),
         ],
       ),
-      body: Column(
+      body: Stack(
         children: [
-          // Stat Summary Banner
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-            decoration: const BoxDecoration(
-              color: Colors.white,
-              border: Border(bottom: BorderSide(color: Color(0xFFE2E8F0))),
+          // Full Screen Background SVG (assets/svg/bg.svg)
+          Positioned.fill(
+            child: SvgPicture.asset(
+              'assets/svg/bg.svg',
+              fit: BoxFit.cover,
             ),
+          ),
+          // Layered Blur 150 Effect
+          Positioned.fill(
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 150, sigmaY: 150),
+              child: Container(
+                color: Colors.transparent,
+              ),
+            ),
+          ),
+          // Foreground Content
+          SafeArea(
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      dateStr,
-                      style: const TextStyle(
-                        fontSize: 14,
-                        color: Color(0xFF64748B),
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    Obx(() => Text(
-                          '${controller.completedTodayCount} / ${controller.todayTasks.length} Selesai',
-                          style: const TextStyle(
-                            fontSize: 13,
-                            color: Color(0xFF6366F1),
-                            fontWeight: FontWeight.bold,
-                          ),
-                        )),
-                  ],
-                ),
-                const SizedBox(height: 14),
-                // Filter Tabs Bar
+                // Horizontal 1-Month Calendar
+                _buildHorizontalCalendar(context),
+
+                // SizedBox 32 below calendar container
+                const SizedBox(height: 32),
+
+                // Filter Tabs Bar (All, To Do, In Progress, Completed)
                 SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
+                  physics: const BouncingScrollPhysics(),
+                  padding: const EdgeInsets.symmetric(horizontal: 22),
                   child: Obx(() {
                     final currentFilter = controller.selectedFilter.value;
                     return Row(
                       children: [
-                        _buildFilterChip('Semua', currentFilter),
-                        _buildFilterChip('Pending', currentFilter),
-                        _buildFilterChip('Selesai', currentFilter),
-                        _buildFilterChip('Prioritas Tinggi', currentFilter),
+                        _buildFilterChip('All', currentFilter),
+                        _buildFilterChip('To Do', currentFilter),
+                        _buildFilterChip('In Progress', currentFilter),
+                        _buildFilterChip('Completed', currentFilter),
                       ],
+                    );
+                  }),
+                ),
+
+                const SizedBox(height: 20),
+
+                // Task List
+                Expanded(
+                  child: Obx(() {
+                    final tasks = controller.filteredTodayTasks;
+
+                    if (tasks.isEmpty) {
+                      return Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.inbox_outlined, size: 64, color: Colors.grey.shade400),
+                            const SizedBox(height: 12),
+                            Text(
+                              'Tidak Ada Tugas',
+                              style: GoogleFonts.lexendDeca(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.grey.shade600,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              'Tidak ada tugas pada tanggal ini',
+                              style: GoogleFonts.lexendDeca(fontSize: 13, color: Colors.grey.shade500),
+                            ),
+                          ],
+                        ),
+                      );
+                    }
+
+                    return ListView.builder(
+                      padding: const EdgeInsets.fromLTRB(22, 10, 22, 90),
+                      itemCount: tasks.length,
+                      itemBuilder: (context, index) {
+                        final task = tasks[index];
+                        return _buildDetailTaskCard(task);
+                      },
                     );
                   }),
                 ),
               ],
             ),
           ),
-
-          // Search Field
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 16, 20, 10),
-            child: TextField(
-              onChanged: (val) => controller.searchQuery.value = val,
-              decoration: InputDecoration(
-                hintText: 'Cari tugas hari ini...',
-                hintStyle: const TextStyle(color: Color(0xFF94A3B8), fontSize: 14),
-                prefixIcon: const Icon(Icons.search_rounded, color: Color(0xFF94A3B8)),
-                filled: true,
-                fillColor: Colors.white,
-                contentPadding: const EdgeInsets.symmetric(vertical: 12),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(14),
-                  borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(14),
-                  borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(14),
-                  borderSide: const BorderSide(color: Color(0xFF6366F1)),
-                ),
-              ),
-            ),
-          ),
-
-          // Task List
-          Expanded(
-            child: Obx(() {
-              final tasks = controller.filteredTodayTasks;
-
-              if (tasks.isEmpty) {
-                return Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.inbox_outlined, size: 64, color: Colors.grey.shade400),
-                      const SizedBox(height: 12),
-                      Text(
-                        'Tidak Ada Tugas',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.grey.shade600,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'Tidak ada tugas yang sesuai dengan filter',
-                        style: TextStyle(fontSize: 13, color: Colors.grey.shade500),
-                      ),
-                    ],
-                  ),
-                );
-              }
-
-              return ListView.builder(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                itemCount: tasks.length,
-                itemBuilder: (context, index) {
-                  final task = tasks[index];
-                  return _buildDetailTaskCard(task);
-                },
-              );
-            }),
-          ),
         ],
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => Get.toNamed('/add-project'),
-        backgroundColor: const Color(0xFF6366F1),
-        foregroundColor: Colors.white,
-        icon: const Icon(Icons.add_rounded),
-        label: const Text('Tambah Tugas', style: TextStyle(fontWeight: FontWeight.bold)),
-      ),
+      bottomNavigationBar: _buildBottomNav(),
+    );
+  }
+
+  Widget _buildHorizontalCalendar(BuildContext context) {
+    final DateTime now = DateTime.now();
+    final int daysInMonth = DateTime(now.year, now.month + 1, 0).day;
+    final List<DateTime> monthDays = List.generate(
+      daysInMonth,
+      (index) => DateTime(now.year, now.month, index + 1),
+    );
+
+    final int todayIndex = now.day - 1;
+    final ScrollController scrollController = ScrollController();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (scrollController.hasClients) {
+        double offset = (todayIndex * 74.0) - (MediaQuery.of(context).size.width / 2) + 37.0;
+        if (offset < 0) offset = 0;
+        if (offset > scrollController.position.maxScrollExtent) {
+          offset = scrollController.position.maxScrollExtent;
+        }
+        scrollController.jumpTo(offset);
+      }
+    });
+
+    return Container(
+      height: 104,
+      padding: const EdgeInsets.symmetric(vertical: 10),
+      color: Colors.transparent,
+      child: Obx(() {
+        final selected = controller.selectedDate.value;
+        return ListView.builder(
+          controller: scrollController,
+          scrollDirection: Axis.horizontal,
+          physics: const BouncingScrollPhysics(),
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          itemCount: monthDays.length,
+          itemBuilder: (context, index) {
+            final date = monthDays[index];
+            final bool isSelected = selected.year == date.year &&
+                selected.month == date.month &&
+                selected.day == date.day;
+
+            String monthStr;
+            String dayOfWeekStr;
+            try {
+              monthStr = DateFormat('MMM', 'en_US').format(date);
+              dayOfWeekStr = DateFormat('EEE', 'en_US').format(date);
+            } catch (_) {
+              monthStr = DateFormat('MMM').format(date);
+              dayOfWeekStr = DateFormat('EEE').format(date);
+            }
+            final String dayNumStr = date.day.toString();
+
+            return GestureDetector(
+              onTap: () {
+                controller.selectedDate.value = date;
+              },
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                width: 64,
+                height: 84,
+                margin: const EdgeInsets.only(right: 10),
+                decoration: BoxDecoration(
+                  color: isSelected ? const Color(0xFF5F33E1) : Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  border: isSelected
+                      ? null
+                      : Border.all(color: const Color(0xFFE2E8F0), width: 1),
+                  boxShadow: isSelected
+                      ? [
+                          BoxShadow(
+                            color: const Color(0xFF5F33E1).withValues(alpha: 0.35),
+                            blurRadius: 8,
+                            offset: const Offset(0, 4),
+                          ),
+                        ]
+                      : [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.03),
+                            blurRadius: 6,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      monthStr,
+                      style: GoogleFonts.lexendDeca(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w400,
+                        color: isSelected ? Colors.white.withValues(alpha: 0.85) : Colors.black,
+                      ),
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      dayNumStr,
+                      style: GoogleFonts.lexendDeca(
+                        fontSize: 19,
+                        fontWeight: FontWeight.w600,
+                        color: isSelected ? Colors.white : Colors.black,
+                      ),
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      dayOfWeekStr,
+                      style: GoogleFonts.lexendDeca(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w400,
+                        color: isSelected ? Colors.white.withValues(alpha: 0.85) : Colors.black,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      }),
     );
   }
 
   Widget _buildFilterChip(String label, String currentFilter) {
     final bool isSelected = currentFilter == label;
-    return Padding(
-      padding: const EdgeInsets.only(right: 8.0),
-      child: ChoiceChip(
-        label: Text(label),
-        selected: isSelected,
-        selectedColor: const Color(0xFF6366F1),
-        backgroundColor: const Color(0xFFF1F5F9),
-        labelStyle: TextStyle(
-          color: isSelected ? Colors.white : const Color(0xFF64748B),
-          fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-          fontSize: 13,
+    return GestureDetector(
+      onTap: () {
+        controller.selectedFilter.value = label;
+      },
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        height: 34,
+        constraints: const BoxConstraints(minWidth: 66),
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        margin: const EdgeInsets.only(right: 10),
+        decoration: BoxDecoration(
+          color: isSelected ? const Color(0xFF5F33E1) : const Color(0xFFEDE8FF),
+          borderRadius: BorderRadius.circular(10),
         ),
-        side: BorderSide.none,
-        onSelected: (selected) {
-          if (selected) {
-            controller.selectedFilter.value = label;
-          }
-        },
+        child: Center(
+          child: Text(
+            label,
+            style: GoogleFonts.lexendDeca(
+              fontSize: 14,
+              fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+              color: isSelected ? Colors.white : const Color(0xFF5F33E1),
+            ),
+          ),
+        ),
       ),
     );
   }
 
   Widget _buildDetailTaskCard(TaskModel task) {
-    final color = Color(task.colorValue);
+    // Determine status string & colors
+    String statusText;
+    Color statusTextColor;
+    Color statusBgColor;
 
-    // Priority color mapping
-    Color priorityColor;
-    if (task.priority == 'Tinggi') {
-      priorityColor = const Color(0xFFEF4444);
-    } else if (task.priority == 'Sedang') {
-      priorityColor = const Color(0xFFF59E0B);
+    if (task.isCompleted) {
+      statusText = 'Done';
+      statusTextColor = const Color(0xFF5F33E1);
+      statusBgColor = const Color(0xFFEDE8FF);
+    } else if (task.priority == 'Tinggi') {
+      statusText = 'In Progress';
+      statusTextColor = const Color(0xFFFF7D53);
+      statusBgColor = const Color(0xFFFFE9E1);
     } else {
-      priorityColor = const Color(0xFF10B981);
+      statusText = 'To-do';
+      statusTextColor = const Color(0xFF0087FF);
+      statusBgColor = const Color(0xFFE3F2FF);
     }
+
+    // Task group theme mapping matching Task Groups
+    final pastelThemes = [
+      {
+        'iconBg': const Color(0xFFFFE4F2),
+        'iconColor': const Color(0xFFF478B8),
+      },
+      {
+        'iconBg': const Color(0xFFE0F2FE),
+        'iconColor': const Color(0xFF0284C7),
+      },
+      {
+        'iconBg': const Color(0xFFFEE2E2),
+        'iconColor': const Color(0xFFEF4444),
+      },
+      {
+        'iconBg': const Color(0xFFF3E8FF),
+        'iconColor': const Color(0xFFA855F7),
+      },
+    ];
+
+    final int projIndex = controller.projects.indexWhere((p) => p.name == task.projectName);
+    final ProjectModel? project = projIndex >= 0 ? controller.projects[projIndex] : null;
+    final theme = pastelThemes[(projIndex >= 0 ? projIndex : 0) % pastelThemes.length];
 
     return Dismissible(
       key: Key(task.id),
@@ -218,137 +357,239 @@ class TodayTaskScreen extends StatelessWidget {
         margin: const EdgeInsets.only(bottom: 12),
         decoration: BoxDecoration(
           color: const Color(0xFFEF4444),
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(15),
         ),
-        child: const Icon(Icons.delete_rounded, color: Colors.white, size: 28),
+        child: const Icon(Icons.delete_rounded, color: Colors.white, size: 24),
       ),
       child: Container(
+        width: double.infinity,
+        height: 130,
         margin: const EdgeInsets.only(bottom: 12),
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(
-            color: task.isCompleted ? const Color(0xFFE2E8F0) : color.withValues(alpha: 0.3),
-            width: task.isCompleted ? 1 : 1.5,
-          ),
+          borderRadius: BorderRadius.circular(15),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.02),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
+              color: Colors.black.withValues(alpha: 0.04),
+              blurRadius: 8,
+              offset: const Offset(0, 3),
             ),
           ],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                GestureDetector(
-                  onTap: () => controller.toggleTaskStatus(task.id),
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 200),
-                    width: 24,
-                    height: 24,
-                    margin: const EdgeInsets.only(top: 2),
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: task.isCompleted ? const Color(0xFF10B981) : Colors.transparent,
-                      border: Border.all(
-                        color: task.isCompleted ? const Color(0xFF10B981) : const Color(0xFF94A3B8),
-                        width: 2,
-                      ),
-                    ),
-                    child: task.isCompleted
-                        ? const Icon(Icons.check_rounded, color: Colors.white, size: 14)
-                        : null,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        task.title,
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: task.isCompleted ? const Color(0xFF94A3B8) : const Color(0xFF0F172A),
-                          decoration: task.isCompleted ? TextDecoration.lineThrough : null,
-                        ),
-                      ),
-                      if (task.description.isNotEmpty) ...[
-                        const SizedBox(height: 4),
-                        Text(
-                          task.description,
-                          style: TextStyle(
-                            fontSize: 13,
-                            color: task.isCompleted ? const Color(0xFFCBD5E1) : const Color(0xFF64748B),
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 14),
+            // Top Row: Project Name (Left) & Task Group Emoji/Icon Box (Right)
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Row(
-                  children: [
-                    // Project tag
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: color.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Text(
-                        task.projectName,
-                        style: TextStyle(fontSize: 11, color: color, fontWeight: FontWeight.bold),
-                      ),
+                Expanded(
+                  child: Text(
+                    task.projectName.isNotEmpty ? task.projectName : 'Grocery shopping app design',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: GoogleFonts.lexendDeca(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w400,
+                      color: const Color(0xFF6E6A7C),
                     ),
-                    const SizedBox(width: 8),
-                    // Priority tag
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: priorityColor.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(Icons.flag_rounded, size: 12, color: priorityColor),
-                          const SizedBox(width: 4),
-                          Text(
-                            task.priority,
-                            style: TextStyle(fontSize: 11, color: priorityColor, fontWeight: FontWeight.w600),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
-                // Time
-                Row(
-                  children: [
-                    const Icon(Icons.access_time_rounded, size: 14, color: Color(0xFF64748B)),
-                    const SizedBox(width: 4),
-                    Text(
-                      task.time,
-                      style: const TextStyle(fontSize: 12, color: Color(0xFF64748B), fontWeight: FontWeight.w500),
+                const SizedBox(width: 8),
+                Container(
+                  width: 24,
+                  height: 24,
+                  decoration: BoxDecoration(
+                    color: theme['iconBg'],
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Center(
+                    child: Icon(
+                      project != null
+                          ? IconData(project.iconCode, fontFamily: 'MaterialIcons')
+                          : Icons.work_outline,
+                      size: 13,
+                      color: theme['iconColor'],
                     ),
-                  ],
+                  ),
                 ),
               ],
             ),
-          ],
+
+              // Middle Left: Task Title (Lexend Deca reg 14, color black)
+              Text(
+                task.title.isNotEmpty ? task.title : 'Market Research',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: GoogleFonts.lexendDeca(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w400,
+                  color: Colors.black,
+                ),
+              ),
+
+              // Bottom Row: Clock & Time (Start) and Status Chip (End)
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  // Start: Clock SVG size 14 & Time Lexend Deca reg 11 color AB94FF
+                  Row(
+                    children: [
+                      SvgPicture.asset(
+                        'assets/svg/clock.svg',
+                        width: 14,
+                        height: 14,
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        task.time.isNotEmpty ? task.time : '10:00 AM',
+                        style: GoogleFonts.lexendDeca(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w400,
+                          color: const Color(0xFFAB94FF),
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  // End: Status Chip Container (Radius 7, Lexend Deca reg 9)
+                  GestureDetector(
+                    onTap: () => controller.toggleTaskStatus(task.id),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: statusBgColor,
+                        borderRadius: BorderRadius.circular(7),
+                      ),
+                      child: Text(
+                        statusText,
+                        style: GoogleFonts.lexendDeca(
+                          fontSize: 9,
+                          fontWeight: FontWeight.w400,
+                          color: statusTextColor,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
+      );
+  }
+
+  Widget _buildBottomNav() {
+    return SizedBox(
+      height: 90,
+      child: Stack(
+        alignment: Alignment.bottomCenter,
+        clipBehavior: Clip.none,
+        children: [
+          // SVG Custom Bottom Bar Shape (assets/svg/buttombar.svg)
+          Positioned(
+            bottom: 0,
+            left: 0,
+            right: 0,
+            child: SvgPicture.asset(
+              'assets/svg/buttombar.svg',
+              width: double.infinity,
+              height: 56,
+              fit: BoxFit.fill,
+            ),
+          ),
+
+          // Icons Overlay over Bottom Bar (height 56)
+          Positioned(
+            bottom: 0,
+            left: 0,
+            right: 0,
+            height: 56,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                GestureDetector(
+                  onTap: () => Get.offAllNamed('/home'),
+                  child: Padding(
+                    padding: const EdgeInsets.all(12.0),
+                    child: SvgPicture.asset(
+                      'assets/svg/home.svg',
+                      width: 24,
+                      height: 24,
+                    ),
+                  ),
+                ),
+                GestureDetector(
+                  onTap: () {},
+                  child: Padding(
+                    padding: const EdgeInsets.all(12.0),
+                    child: SvgPicture.asset(
+                      'assets/svg/calender.svg',
+                      width: 24,
+                      height: 24,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 48), // Celah tengah untuk plus button
+                GestureDetector(
+                  onTap: () {},
+                  child: Padding(
+                    padding: const EdgeInsets.all(12.0),
+                    child: SvgPicture.asset(
+                      'assets/svg/note.svg',
+                      width: 24,
+                      height: 24,
+                    ),
+                  ),
+                ),
+                GestureDetector(
+                  onTap: () {},
+                  child: Padding(
+                    padding: const EdgeInsets.all(12.0),
+                    child: SvgPicture.asset(
+                      'assets/svg/profile.svg',
+                      width: 24,
+                      height: 24,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // Plus Circle Button (size 46, warna 5F33E1, SVG assets/svg/plus.svg size 28, dengan shadow, bottom: 34)
+          Positioned(
+            bottom: 34,
+            child: GestureDetector(
+              onTap: () => Get.toNamed('/add-project'),
+              child: Container(
+                width: 46,
+                height: 46,
+                decoration: BoxDecoration(
+                  color: const Color(0xFF5F33E1),
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF5F33E1).withValues(alpha: 0.45),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Center(
+                  child: SvgPicture.asset(
+                    'assets/svg/plus.svg',
+                    width: 28,
+                    height: 28,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

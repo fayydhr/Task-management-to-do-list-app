@@ -10,8 +10,9 @@ class TaskController extends GetxController {
   var projects = <ProjectModel>[].obs;
 
   var selectedCategory = 'Semua'.obs;
-  var selectedFilter = 'Semua'.obs; // Semua, Pending, Selesai, Prioritas Tinggi
+  var selectedFilter = 'All'.obs; // All, To Do, In Progress, Completed
   var searchQuery = ''.obs;
+  var selectedDate = DateTime.now().obs;
 
   @override
   void onInit() {
@@ -153,11 +154,11 @@ class TaskController extends GetxController {
 
   // Computed Getters
   List<TaskModel> get todayTasks {
-    final now = DateTime.now();
+    final sel = selectedDate.value;
     return tasks.where((task) {
-      return task.date.year == now.year &&
-          task.date.month == now.month &&
-          task.date.day == now.day;
+      return task.date.year == sel.year &&
+          task.date.month == sel.month &&
+          task.date.day == sel.day;
     }).toList();
   }
 
@@ -167,11 +168,14 @@ class TaskController extends GetxController {
       list = list.where((t) => t.title.toLowerCase().contains(searchQuery.value.toLowerCase())).toList();
     }
 
-    if (selectedFilter.value == 'Pending') {
+    final filter = selectedFilter.value;
+    if (filter == 'To Do' || filter == 'Pending') {
       list = list.where((t) => !t.isCompleted).toList();
-    } else if (selectedFilter.value == 'Selesai') {
+    } else if (filter == 'In Progress') {
+      list = list.where((t) => !t.isCompleted).toList();
+    } else if (filter == 'Completed' || filter == 'Selesai') {
       list = list.where((t) => t.isCompleted).toList();
-    } else if (selectedFilter.value == 'Prioritas Tinggi') {
+    } else if (filter == 'Prioritas Tinggi') {
       list = list.where((t) => t.priority == 'Tinggi').toList();
     }
 

@@ -16,12 +16,12 @@ class AppPages {
     GetPage(
       name: '/home',
       page: () => HomeScreen(),
-      transition: Transition.rightToLeftWithFade,
+      transition: Transition.noTransition,
     ),
     GetPage(
       name: '/today-tasks',
       page: () => TodayTaskScreen(),
-      transition: Transition.rightToLeft,
+      transition: Transition.noTransition,
     ),
     GetPage(
       name: '/add-project',
