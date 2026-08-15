@@ -10,6 +10,7 @@ class TaskController extends GetxController {
   final GetTasksUseCase getTasksUseCase;
   final AddTaskUseCase addTaskUseCase;
   final ToggleTaskStatusUseCase toggleTaskStatusUseCase;
+  final UpdateTaskUseCase updateTaskUseCase;
   final DeleteTaskUseCase deleteTaskUseCase;
 
   final GetProjectsUseCase getProjectsUseCase;
@@ -25,6 +26,7 @@ class TaskController extends GetxController {
     required this.getTasksUseCase,
     required this.addTaskUseCase,
     required this.toggleTaskStatusUseCase,
+    required this.updateTaskUseCase,
     required this.deleteTaskUseCase,
     required this.getProjectsUseCase,
     required this.addProjectUseCase,
@@ -71,6 +73,17 @@ class TaskController extends GetxController {
   void toggleTaskStatus(String id) {
     toggleTaskStatusUseCase.execute(id);
     tasks.assignAll(getTasksUseCase.execute());
+  }
+
+  void updateTask(TaskEntity task) {
+    updateTaskUseCase.execute(task);
+    tasks.assignAll(getTasksUseCase.execute());
+    Get.snackbar(
+      'Diperbarui',
+      'Tugas "${task.title}" berhasil diperbarui',
+      snackPosition: SnackPosition.BOTTOM,
+      duration: const Duration(seconds: 2),
+    );
   }
 
   void deleteTask(String id) {

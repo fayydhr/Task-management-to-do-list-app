@@ -16,21 +16,7 @@ class AddProjectScreen extends StatefulWidget {
 }
 
 class _AddProjectScreenState extends State<AddProjectScreen> {
-  final TaskController controller = Get.isRegistered<TaskController>()
-      ? Get.find<TaskController>()
-      : Get.put(TaskController(
-          getTasksUseCase: Get.find(),
-          addTaskUseCase: Get.find(),
-          toggleTaskStatusUseCase: Get.find(),
-          deleteTaskUseCase: Get.find(),
-          getProjectsUseCase: Get.find(),
-          addProjectUseCase: Get.find(),
-          deleteProjectUseCase: Get.find(),
-          getNotesUseCase: Get.find(),
-          addNoteUseCase: Get.find(),
-          togglePinNoteUseCase: Get.find(),
-          deleteNoteUseCase: Get.find(),
-        ));
+  final TaskController controller = Get.find<TaskController>();
 
   final _projectNameController = TextEditingController(text: 'Grocery Shopping App');
   final _descriptionController = TextEditingController();

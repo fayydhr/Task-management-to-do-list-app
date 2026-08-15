@@ -22,6 +22,13 @@ class ToggleTaskStatusUseCase {
   void execute(String id) => repository.toggleTaskStatus(id);
 }
 
+class UpdateTaskUseCase {
+  final TaskRepository repository;
+  UpdateTaskUseCase(this.repository);
+
+  void execute(TaskEntity task) => repository.updateTask(task);
+}
+
 class DeleteTaskUseCase {
   final TaskRepository repository;
   DeleteTaskUseCase(this.repository);

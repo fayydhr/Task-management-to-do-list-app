@@ -5,5 +5,6 @@ abstract class TaskRepository {
   void saveTasks(List<TaskEntity> tasks);
   void addTask(TaskEntity task);
   void toggleTaskStatus(String id);
+  void updateTask(TaskEntity task);
   void deleteTask(String id);
 }

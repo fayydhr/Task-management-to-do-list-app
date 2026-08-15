@@ -36,6 +36,16 @@ class TaskRepositoryImpl implements TaskRepository {
   }
 
   @override
+  void updateTask(TaskEntity task) {
+    final tasks = getTasks();
+    final index = tasks.indexWhere((t) => t.id == task.id);
+    if (index != -1) {
+      tasks[index] = task;
+      saveTasks(tasks);
+    }
+  }
+
+  @override
   void deleteTask(String id) {
     final tasks = getTasks();
     tasks.removeWhere((t) => t.id == id);

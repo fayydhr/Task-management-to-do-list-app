@@ -30,6 +30,7 @@ class InitialBinding implements Bindings {
     final getTasks = GetTasksUseCase(taskRepo);
     final addTask = AddTaskUseCase(taskRepo);
     final toggleTaskStatus = ToggleTaskStatusUseCase(taskRepo);
+    final updateTask = UpdateTaskUseCase(taskRepo);
     final deleteTask = DeleteTaskUseCase(taskRepo);
 
     final getProjects = GetProjectsUseCase(projectRepo);
@@ -47,6 +48,7 @@ class InitialBinding implements Bindings {
         getTasksUseCase: getTasks,
         addTaskUseCase: addTask,
         toggleTaskStatusUseCase: toggleTaskStatus,
+        updateTaskUseCase: updateTask,
         deleteTaskUseCase: deleteTask,
         getProjectsUseCase: getProjects,
         addProjectUseCase: addProject,
