@@ -221,7 +221,7 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
                   Container(
                     width: double.infinity,
                     height: 63,
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(15),
@@ -233,41 +233,26 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
                         ),
                       ],
                     ),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Project Name',
-                          style: GoogleFonts.lexendDeca(
-                            fontSize: 9,
+                    child: Center(
+                      child: TextField(
+                        controller: _projectNameController,
+                        style: GoogleFonts.lexendDeca(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w400,
+                          color: Colors.black,
+                        ),
+                        decoration: InputDecoration(
+                          isDense: true,
+                          contentPadding: EdgeInsets.zero,
+                          border: InputBorder.none,
+                          hintText: 'Grocery Shopping App',
+                          hintStyle: GoogleFonts.lexendDeca(
+                            fontSize: 14,
                             fontWeight: FontWeight.w400,
-                            color: const Color(0xFF6E6A7C),
+                            color: const Color(0xFF94A3B8),
                           ),
                         ),
-                        const SizedBox(height: 2),
-                        Expanded(
-                          child: TextField(
-                            controller: _projectNameController,
-                            style: GoogleFonts.lexendDeca(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w400,
-                              color: Colors.black,
-                            ),
-                            decoration: InputDecoration(
-                              isDense: true,
-                              contentPadding: EdgeInsets.zero,
-                              border: InputBorder.none,
-                              hintText: 'Grocery Shopping App',
-                              hintStyle: GoogleFonts.lexendDeca(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w400,
-                                color: const Color(0xFF94A3B8),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
+                      ),
                     ),
                   ),
 
@@ -563,6 +548,30 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
       initialDate: isStart ? _startDate : _endDate,
       firstDate: DateTime.now().subtract(const Duration(days: 365)),
       lastDate: DateTime.now().add(const Duration(days: 365 * 3)),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: const ColorScheme.light(
+              primary: Color(0xFF5F33E1),
+              onPrimary: Colors.white,
+              surface: Colors.white,
+              onSurface: Color(0xFF0F172A),
+            ),
+            dialogTheme: DialogThemeData(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(24),
+              ),
+            ),
+            textButtonTheme: TextButtonThemeData(
+              style: TextButton.styleFrom(
+                foregroundColor: const Color(0xFF5F33E1),
+                textStyle: GoogleFonts.lexendDeca(fontWeight: FontWeight.w600),
+              ),
+            ),
+          ),
+          child: child!,
+        );
+      },
     );
     if (picked != null) {
       setState(() {
